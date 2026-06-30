@@ -14,7 +14,7 @@ import {
 } from "../services/AI/imageClassifier.service.js";
 import Hospital from "../models/hospital.model.js";
 import { calculateDistanceMeters } from "../utils/distance.js";
-
+import { analyzeEmergencyImage } from "../services/AI/emergencyAI.service.js";
 const getBookingModel = () => {
   const bookingConnection = getBookingConnection();
   return getBookingDbBookingModel(bookingConnection);
@@ -188,97 +188,35 @@ export const createEmergencyRequest = async (req, res) => {
       }
     }
 
-    let duplicateDetected = false;
-    let duplicateOf = null;
-    let similarityScore = 0;
-    let embedding = [];
-    let aiAnalysis = null;
+    let aiResult = {
+      embedding: [],
+      duplicateDetected: false,
+      duplicateOf: null,
+      similarityScore: 0,
+      aiAnalysis: null,
+      priority: 0,
+      warningRequired: false,
+    };
     if (secureImageUrl) {
       try {
-        // Generate embedding for new image
-        embedding = await generateEmbedding(
-          secureImageUrl
+
+        aiResult = await analyzeEmergencyImage(
+          secureImageUrl,
+          latitude,
+          longitude
         );
 
-        // Find requests from last 15 minutes
-        const tenMinutesAgo = new Date(
-          Date.now() - 10 * 60 * 1000
-        );
+        console.log("AI Result:", aiResult);
 
-        const recentRequests =
-          await emergencyRequestSchema.find({
-            createdAt: {
-              $gte: tenMinutesAgo,
-            },
-            embedding: {
-              $exists: true,
-              $ne: [],
-            },
-          });
-        console.log(
-          `Checking ${recentRequests.length} recent reports`
-        );
-        for (const existingRequest of recentRequests) {
-
-          // Skip reports that don't have embeddings
-          if (
-            !existingRequest.embedding ||
-            existingRequest.embedding.length === 0
-          ) {
-            continue;
-          }
-
-          // Skip already-marked duplicates
-          if (existingRequest.duplicateDetected) {
-            continue;
-          }
-
-          const similarity =
-            await compareEmbeddings(
-              embedding,
-              existingRequest.embedding
-            );
-
-          const distance =
-            calculateDistanceMeters(
-              latitude,
-              longitude,
-              existingRequest.location.latitude,
-              existingRequest.location.longitude
-            );
-
-          console.log(
-            `Similarity: ${similarity}, Distance: ${distance}`
-          );
-
-          if (
-            similarity > 0.80 &&
-            distance < 50
-          ) {
-            duplicateDetected = true;
-            duplicateOf = existingRequest._id;
-            similarityScore = similarity;
-
-            console.log(
-              `Duplicate found. Similarity=${similarity}`
-            );
-
-            break;
-          }
-        }
-        if (!duplicateDetected) {
-          aiAnalysis = await classifyImage(secureImageUrl);
-
-          console.log("AI Classification:", aiAnalysis);
-        }
       } catch (error) {
+
         console.error(
-          "Duplicate detection error:",
+          "AI Service Error:",
           error.message
         );
+
       }
     }
-    
     // Create request
     const request = await emergencyRequestSchema.create({
       user: req.user?._id || undefined,
@@ -286,26 +224,29 @@ export const createEmergencyRequest = async (req, res) => {
       location: { latitude, longitude },
       requestType: "EMERGENCY",
 
-      embedding,
-      duplicateDetected,
-      duplicateOf,
-      similarityScore,
-      aiAnalysis: aiAnalysis
+      embedding: aiResult.embedding,
+
+      duplicateDetected: aiResult.duplicateDetected,
+
+      duplicateOf: aiResult.duplicateOf,
+
+      similarityScore: aiResult.similarityScore,
+      aiAnalysis: aiResult.aiAnalysis
         ? {
           predictedClass:
-            aiAnalysis.predicted_class,
+            aiResult.aiAnalysis.predicted_class,
 
           confidence:
-            aiAnalysis.confidence,
+            aiResult.aiAnalysis.confidence,
 
           severity:
-            aiAnalysis.severity,
+            aiResult.aiAnalysis.severity,
 
           recommendedAmbulance:
-            aiAnalysis.recommended_ambulance,
+            aiResult.aiAnalysis.recommended_ambulance,
 
           allProbabilities:
-            aiAnalysis.all_probabilities,
+            aiResult.aiAnalysis.all_probabilities,
         }
         : undefined,
     });
@@ -318,7 +259,7 @@ export const createEmergencyRequest = async (req, res) => {
     // 3️⃣ Emit to all ambulances, hospitals, and police
     const io = getIO();
 
-    if (!duplicateDetected) {
+    if (!aiResult.duplicateDetected) {
       console.log(
         "EMITTING NEW EMERGENCY TO AMBULANCE ROOM:",
         populatedRequest._id
@@ -329,7 +270,7 @@ export const createEmergencyRequest = async (req, res) => {
       );
     } else {
       console.log(
-        `Duplicate emergency blocked. Original request: ${duplicateOf}`
+        `Duplicate emergency blocked. Original request: ${aiResult.duplicateOf}`
       );
     }
     
