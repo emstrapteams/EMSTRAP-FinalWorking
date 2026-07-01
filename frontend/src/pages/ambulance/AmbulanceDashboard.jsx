@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../services/api";
 import {
   getDriverHistory, acceptEmergency, declineEmergency, cancelEmergency,
-  getHospitals, assignHospital, completeEmergencyAPI, markArrivedAPI
+  getHospitals, getAvailableHospitals, assignHospital, completeEmergencyAPI, markArrivedAPI
 } from "../../services/api";
 import API from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -481,7 +481,7 @@ export default function AmbulanceDashboard() {
       setHospitalLoading(true);
 
       try {
-        const res = await getHospitals();
+        const res = await getAvailableHospitals();
 
         
         setHospitals(
@@ -1068,6 +1068,11 @@ export default function AmbulanceDashboard() {
                         <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/30 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 rounded-2xl flex items-center justify-center transition-colors shrink-0"><Hospital className="w-6 h-6 text-indigo-600 dark:text-indigo-400" /></div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{h.name}</p>
+                          <div className="mt-1 inline-flex items-center rounded-full bg-green-100 px-2 py-1">
+                            <span className="text-xs font-bold text-green-700">
+                              {h.emergencyBeds} Beds Available
+                            </span>
+                          </div>
                           <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3 shrink-0" /> {typeof h.location === "string"
                             ? h.location
                             : h.address ||

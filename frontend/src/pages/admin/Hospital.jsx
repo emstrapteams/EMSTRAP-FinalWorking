@@ -136,6 +136,7 @@ export default function Hospital() {
     City: h.city,
     Mobile: h.mobile,
     Email: h.email,
+    "Emergency Beds": h.emergencyBeds,
     "Created Date": formatDate(h.createdAt),
     "Updated Date": formatDate(h.updatedAt),
     "Hospital ID": h._id,
@@ -232,6 +233,7 @@ export default function Hospital() {
                 <th className={cls.th}>Location</th>
                 <th className={cls.th}>Mobile</th>
                 <th className={cls.th}>Email</th>
+                <th className={cls.th}>Emergency Beds</th>
                 <th className={cls.th}>Created</th>
                 <th className={cls.th}>Actions</th>
               </tr>
@@ -256,8 +258,24 @@ export default function Hospital() {
                     <p className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-40">{h.address}</p>
                   </td>
                   <td className={`${cls.td} text-sm text-gray-600 dark:text-gray-400`}>{h.mobile}</td>
-                  <td className={`${cls.td} text-sm text-gray-600 dark:text-gray-400`}>{h.email}</td>
-                  <td className={`${cls.td} text-xs text-gray-500 dark:text-gray-400`}>{formatDate(h.createdAt)}</td>
+                  <td className={`${cls.td} text-sm text-gray-600 dark:text-gray-400`}>
+                    {h.email}
+                  </td>
+
+                  <td className={cls.td}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${h.emergencyBeds > 0
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                        }`}
+                    >
+                        {h.emergencyBeds}
+                    </span>
+                  </td>
+
+                  <td className={`${cls.td} text-xs text-gray-500 dark:text-gray-400`}>
+                    {formatDate(h.createdAt)}
+                  </td>
                   <td className={cls.td}>
                     <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                       <button type="button" onClick={() => setSelectedHospital(h)} className={cls.btnView}>View</button>

@@ -24,7 +24,6 @@ export const getHospitals = async (req, res) => {
     const hospitals = await Hospital.find()
       .select("-password")
       .sort({ createdAt: -1 });
-
     return res.status(200).json({
       success: true,
       hospitals
@@ -52,7 +51,29 @@ export const getHospitalById = async (req, res) => {
     return res.status(500).json({ success: false, message: "Error fetching hospital", error: error.message });
   }
 };
+export const getAvailableHospitals = async (req, res) => {
+  try {
+    const hospitals = await Hospital.find({
+      emergencyBeds: { $gt: 0 },
+    })
+      .select("-password")
+      .sort({
+        emergencyBeds: -1,
+        createdAt: -1,
+      });
 
+    return res.status(200).json({
+      success: true,
+      hospitals,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching available hospitals",
+      error: error.message,
+    });
+  }
+};
 export const createHospital = async (req, res) => {
   try {
     const validationError = validateHospitalPayload(req.body);
@@ -63,7 +84,6 @@ export const createHospital = async (req, res) => {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
     const hospital = await Hospital.create({
-     
       name: req.body.name,
       address: req.body.address,
       city: req.body.city,
@@ -71,6 +91,7 @@ export const createHospital = async (req, res) => {
       email: req.body.email,
       password: hashedPassword,
       role: "hospital",
+      emergencyBeds: req.body.emergencyBeds ?? 0,
       isEmailVerified: true,
     });
     console.log("CREATED HOSPITAL:", hospital);
@@ -107,6 +128,61 @@ export const updateHospital = async (req, res) => {
     return res.status(200).json({ success: true, message: "Hospital updated successfully", hospital });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Error updating hospital", error: error.message });
+  }
+};
+
+export const updateEmergencyBeds = async (req, res) => {
+  try {
+    const { emergencyBeds } = req.body;
+    if (req.user.role !== "hospital") {
+      return res.status(403).json({
+        success: false,
+        message: "Only hospitals can update emergency bed availability.",
+      });
+    }
+    // Validate input
+    if (
+      emergencyBeds === undefined ||
+      emergencyBeds === null ||
+      emergencyBeds < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid number of emergency beds.",
+      });
+    }
+
+    // Logged-in hospital
+    const hospitalId = req.user._id.toString();
+
+    const hospital = await Hospital.findByIdAndUpdate(
+      hospitalId,
+      { emergencyBeds },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password");
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: "Hospital not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Emergency bed availability updated successfully.",
+      hospital,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error updating emergency beds.",
+      error: error.message,
+    });
   }
 };
 

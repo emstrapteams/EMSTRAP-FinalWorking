@@ -24,7 +24,10 @@ import {
   Clock,
   CheckCircle,
 } from "lucide-react";
-
+import {
+  getHospitalById,
+  updateEmergencyBeds,
+} from "../../services/hospitalApi";
 // Standard Leaflet markers with enhanced animation styles
 const ambulanceIcon = L.divIcon({
   html: `<div class="relative flex items-center justify-center">
@@ -78,7 +81,8 @@ export default function HospitalDashboard() {
 
   // Search bar query state
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [emergencyBeds, setEmergencyBeds] = useState(0);
+  const [updatingBeds, setUpdatingBeds] = useState(false);
   const dismissPopup = useCallback((id) => {
     setPopupNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
@@ -135,6 +139,41 @@ export default function HospitalDashboard() {
 
     return () => newSocket.close();
   }, [user?._id]);
+  useEffect(() => {
+    const fetchHospitalBeds = async () => {
+      try {
+        if (!user?._id) return;
+
+        const res = await getHospitalById(user._id);
+
+        if (res.success) {
+          setEmergencyBeds(res.hospital.emergencyBeds || 0);
+        }
+      } catch (err) {
+        console.error("Failed to load emergency beds", err);
+      }
+    };
+
+    fetchHospitalBeds();
+  }, [user]);
+
+  const handleUpdateBeds = async () => {
+    try {
+      setUpdatingBeds(true);
+
+      const res = await updateEmergencyBeds(emergencyBeds);
+
+      if (res.success) {
+        alert("Emergency beds updated successfully.");
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update emergency beds.");
+    } finally {
+      setUpdatingBeds(false);
+    }
+  };
 
   const handleStatusUpdate = async (id, status) => {
     try {
@@ -263,15 +302,53 @@ export default function HospitalDashboard() {
   };
 
   return (
-    <div className="space-y-8 w-full">
+    <div className="space-y-4 w-full">
       {/* SIMPLE WELCOME HEADER */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-         Hospital Dashboard <span></span>
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Manage bookings, track ambulances and monitor emergency requests.
-        </p>
+      <div className="flex justify-between items-start w-full mb-6">
+
+        {/* Left Section */}
+        <div className="flex-1">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
+            Hospital Dashboard
+          </h1>
+
+          <p className="mt-2 text-gray-500">
+            Manage bookings, track ambulances and monitor emergency requests.
+          </p>
+        </div>
+
+        {/* Right Section */}
+        <div className="flex-shrink-0 ml-8 -mt-16">
+
+          <div className="w-48 rounded-xl border bg-white p-3 shadow-sm">
+
+            <h3 className="text-base font-bold">
+              Emergency Beds
+            </h3>
+
+            <p className="text-xs text-gray-500 mt-1 mb-2">
+              Available Today
+            </p>
+
+            <input
+              type="number"
+              value={emergencyBeds}
+              onChange={(e) => setEmergencyBeds(Number(e.target.value))}
+              className="w-full rounded-md border px-2 py-1 text-sm mb-2"
+            />
+
+            <button
+              disabled={updatingBeds}
+              onClick={handleUpdateBeds}
+              className="w-full bg-red-600 hover:bg-red-700 text-white rounded-md py-1.5 text-sm font-semibold disabled:opacity-50"
+            >
+              {updatingBeds ? "Updating..." : "Update"}
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
       {error && (
@@ -615,7 +692,7 @@ export default function HospitalDashboard() {
 
                             <span className="text-[10px] font-bold text-blue-600">
 
-                              🎯 {(alert.aiAnalysis.confidence * 100).toFixed(1)}%
+                               {(alert.aiAnalysis.confidence * 100).toFixed(1)}%
 
                             </span>
 

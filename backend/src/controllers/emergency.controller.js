@@ -35,7 +35,13 @@ export const assignHospital = async (req, res) => {
     if (!hospital) {
       return res.status(404).json({ success: false, message: "Hospital not found" });
     }
-
+    // Check emergency bed availability
+    if (hospital.emergencyBeds <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Selected hospital has no emergency beds available."
+      });
+    }
     const existing = await emergencyRequestSchema.findById(id);
     if (!existing) {
       return res.status(404).json({ success: false, message: "Emergency request not found" });
@@ -69,7 +75,8 @@ export const assignHospital = async (req, res) => {
       .populate("user", "name mobile email address city")
       .populate("ambulance", "name email mobile vehicleNumber")
       .populate("hospital", "name address city mobile email");
-    
+    hospital.emergencyBeds -= 1;
+    await hospital.save();
     const io = getIO();
 
     // Notify ONLY the specific hospital with FULL details

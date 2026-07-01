@@ -36,6 +36,12 @@ const hospitalSchema = new Schema(
             required: true
         },
 
+        emergencyBeds: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
         isEmailVerified: {
             type: Boolean,
             default: true

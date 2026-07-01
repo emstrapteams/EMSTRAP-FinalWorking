@@ -5,6 +5,11 @@ export const getHospitals = async () => {
   return res.data;
 };
 
+export const getAvailableHospitals = async () => {
+  const res = await API.get("/api/hospitals/available");
+  return res.data;
+};
+
 export const getHospitalById = async (hospitalId) => {
   const res = await API.get(`/api/hospitals/${hospitalId}`);
   return res.data;
@@ -22,5 +27,12 @@ export const updateHospital = async (hospitalId, payload) => {
 
 export const deleteHospital = async (hospitalId) => {
   const res = await API.delete(`/api/hospitals/${hospitalId}`);
+  return res.data;
+};
+export const updateEmergencyBeds = async (emergencyBeds) => {
+  const res = await API.patch("/api/hospitals/update-beds", {
+    emergencyBeds,
+  });
+
   return res.data;
 };
