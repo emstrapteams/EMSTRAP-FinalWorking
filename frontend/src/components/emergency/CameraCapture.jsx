@@ -10,7 +10,14 @@ import toast from "react-hot-toast";
 
 const isMobile = typeof window !== "undefined" && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-const CameraCaptureComponent = ({ onSend, onCancel }, ref) => {
+const CameraCaptureComponent = (
+  {
+    onSend,
+    onCancel,
+    mode = "emergency",
+  },
+  ref
+) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -130,7 +137,9 @@ const CameraCaptureComponent = ({ onSend, onCancel }, ref) => {
               }}
               className="w-2/3 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
             >
-              SEND EMERGENCY
+              {mode === "emergency"
+                ? "SEND EMERGENCY"
+                : "UPLOAD EVIDENCE"}
             </button>
           </div>
         </>
@@ -153,7 +162,9 @@ const CameraCaptureComponent = ({ onSend, onCancel }, ref) => {
               }}
               className="w-1/2 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl transition-colors"
             >
-              Send Emergency
+                {mode === "emergency"
+                  ? "Send Emergency"
+                  : "Upload Evidence"}
             </button>
           </div>
         </>

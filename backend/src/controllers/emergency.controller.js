@@ -396,6 +396,72 @@ export const precheckEmergency = async (req, res) => {
     });
   }
 };
+
+export const uploadEvidence = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageUrl } = req.body;
+    console.log("========== UPLOAD EVIDENCE API ==========");
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Image is required",
+      });
+    }
+
+    const emergency = await emergencyRequestSchema.findById(id);
+
+    if (!emergency) {
+      return res.status(404).json({
+        success: false,
+        message: "Emergency not found",
+      });
+    }
+
+    let secureImageUrl = "";
+
+    // Reuse existing Cloudinary URL if already uploaded
+    if (imageUrl.startsWith("https://res.cloudinary.com")) {
+      secureImageUrl = imageUrl;
+    } else {
+      const uploadResponse = await cloudinary.uploader.upload(imageUrl, {
+        folder: "emergencies/evidence",
+      });
+
+      secureImageUrl = uploadResponse.secure_url;
+    }
+
+    // Classification ONLY
+    const aiAnalysis = await classifyImage(secureImageUrl);
+
+    emergency.evidence.push({
+      imageUrl: secureImageUrl,
+
+      aiAnalysis: {
+        predictedClass: aiAnalysis.predicted_class,
+        confidence: aiAnalysis.confidence,
+        severity: aiAnalysis.severity,
+        recommendedAmbulance: aiAnalysis.recommended_ambulance,
+        allProbabilities: aiAnalysis.all_probabilities,
+      },
+    });
+
+    await emergency.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Evidence uploaded successfully.",
+      evidence: emergency.evidence,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const acceptEmergency = async (req, res) => {
   try {
     const { id } = req.params;

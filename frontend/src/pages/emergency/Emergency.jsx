@@ -3,6 +3,7 @@ import API, {
   API_URL,
   cancelEmergency,
   precheckEmergency,
+  uploadEvidence,
 } from "../../services/api";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
@@ -25,6 +26,8 @@ export default function Emergency() {
   const [showAIWarning, setShowAIWarning] = useState(false);
   const [pendingEmergency, setPendingEmergency] = useState(null);
   const [aiResult, setAIResult] = useState(null);
+  const [uploadingEvidence, setUploadingEvidence] = useState(false);
+  const [showEvidenceCamera, setShowEvidenceCamera] = useState(false);
   const setStep = (newStep) => {
     sessionStorage.setItem("emergency_step", newStep);
     setStepState(newStep);
@@ -233,7 +236,36 @@ export default function Emergency() {
       setStep("start");
     }
   };
+  const handleUploadEvidence = async (photoData) => {
+    try {
+      setUploadingEvidence(true);
 
+      const requestId = sessionStorage.getItem(
+        "emergency_requestId"
+      );
+
+      if (!requestId) {
+        toast.error("Emergency not found.");
+        return;
+      }
+      await uploadEvidence(requestId, photoData);
+
+      setShowEvidenceCamera(false);
+
+      toast.success("Evidence uploaded successfully.");
+
+    } catch (err) {
+
+      console.error(err);
+
+      toast.error("Failed to upload evidence.");
+
+    } finally {
+
+      setUploadingEvidence(false);
+
+    }
+  };
   const resetEmergency = () => {
     setStep("start");
     setDriverInfo(null);
@@ -389,6 +421,27 @@ export default function Emergency() {
               </div>
               <div className="px-2">
                 <EmergencyProgress />
+              </div>
+              <div className="mt-6 border-t pt-5">
+
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">
+                  Have more photos? Upload them to help responders understand the emergency better.
+                </p>
+
+                <button
+                  onClick={() => setShowEvidenceCamera(true)}
+                  className="w-full rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                >
+                  Add More Evidence Images
+                </button>
+                {showEvidenceCamera && (
+                  <div className="mt-4 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/50 p-2">
+                    <CameraCapture
+                      onSend={handleUploadEvidence}
+                      onCancel={() => setShowEvidenceCamera(false)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

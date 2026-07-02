@@ -28,6 +28,8 @@ import {
   getHospitalById,
   updateEmergencyBeds,
 } from "../../services/hospitalApi";
+import EvidenceImageViewer from "../../components/common/EvidenceImageViewer";
+
 // Standard Leaflet markers with enhanced animation styles
 const ambulanceIcon = L.divIcon({
   html: `<div class="relative flex items-center justify-center">
@@ -782,26 +784,18 @@ export default function HospitalDashboard() {
           onClose={() => setSelectedAlert(null)}
         >
           <div className="space-y-6">
+
+            <EvidenceImageViewer
+              mainImage={selectedAlert.imageUrl}
+              evidence={selectedAlert.evidence || []}
+            />
+
             <div className="bg-slate-55 dark:bg-slate-905 p-1.5 rounded-xl border border-slate-105 dark:border-slate-900">
-              <AdminDetailGrid data={getAlertDetails(selectedAlert)} />
+              <AdminDetailGrid
+                data={getAlertDetails(selectedAlert)}
+              />
             </div>
 
-            {selectedAlert.imageUrl && (
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-405">Accident Scene Evidence</p>
-                <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-900 group max-h-[300px]">
-                  <img
-                    src={selectedAlert.imageUrl}
-                    alt="Emergency Scene evidence uploaded by patient"
-                    className="w-full h-full object-cover max-h-[300px] transition-transform duration-505 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent flex items-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <p className="text-xs text-white font-semibold">Incident reference photo</p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
             <div className="flex justify-end pt-2">
               <button
                 type="button"

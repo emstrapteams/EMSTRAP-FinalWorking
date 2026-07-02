@@ -13,7 +13,7 @@ import AdminModal from "../../components/admin/AdminModal";
 import { formatDate, getStatusBadgeClasses } from "../../components/admin/admin.utils";
 import toast from "react-hot-toast";
 import EmergencyPopup from "../../components/notifications/EmergencyPopup";
-
+import EvidenceImageViewer from "../../components/common/EvidenceImageViewer";
 const STATUS_LABELS = {
   PENDING: "Pending",
   AMBULANCE_ACCEPTED: "In Progress",
@@ -148,7 +148,7 @@ export default function PoliceDashboard() {
     "Vehicle Number": c.ambulance?.vehicleNumber || "N/A",
     "Assigned Hospital": c.hospital?.name || "Pending Acceptance",
     "Hospital Location": c.hospital?.location || "N/A",
-    Image: c.imageUrl || "N/A",
+  
     "Reported At": formatDate(c.createdAt),
     "AI Prediction": c.aiAnalysis?.predictedClass || "N/A",
 
@@ -341,7 +341,13 @@ export default function PoliceDashboard() {
           title="Case Details"
           subtitle="Full emergency case information"
           onClose={() => setSelectedCase(null)}
-        >
+        > 
+          <div className="mb-6">
+            <EvidenceImageViewer
+              mainImage={selectedCase.imageUrl}
+              evidence={selectedCase.evidence || []}
+            />
+          </div>
           <AdminDetailGrid data={getCaseDetails(selectedCase)} />
         </AdminModal>
       )}

@@ -17,7 +17,7 @@ import {
   X, ClipboardList, Phone, Inbox, ChevronRight, Bell,
   User, LogOut, Moon, Sun, Camera,
 } from "lucide-react";
-
+import EvidenceImageViewer from "../../components/common/EvidenceImageViewer";
 // ─── Fixed Header ─────────────────────────────────────────────────────────────
 
 function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus, onLogout }) {
@@ -814,7 +814,14 @@ export default function AmbulanceDashboard() {
                                   <MapPin className="w-3.5 h-3.5 shrink-0" />
                                   <span className="truncate font-semibold">Location: [{req.location?.latitude?.toFixed(4)}, {req.location?.longitude?.toFixed(4)}]</span>
                                 </div>
-                                {req.imageUrl && <div className="mb-3"><img src={req.imageUrl} alt="Patient" className="w-full h-32 object-cover rounded-xl border border-gray-100 dark:border-gray-800 shadow-inner" /></div>}
+                                {req.imageUrl && (
+                                  <div className="mb-3">
+                                    <EvidenceImageViewer
+                                      mainImage={req.imageUrl}
+                                      evidence={req.evidence || []}
+                                    />
+                                  </div>
+                                )}
                               </div>
                               <div className="flex gap-2">
                                 <button onClick={() => handleDecline(req._id)} className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl font-bold text-xs transition-colors border border-gray-200 dark:border-gray-700">Decline</button>

@@ -7,7 +7,7 @@ import AdminSurface from "../../components/admin/AdminSurface";
 import { formatDate } from "../../components/admin/admin.utils";
 import { deleteEmergencyById, getAllEmergencies, getErrorMessage } from "../../services/api";
 import LiveTrackingMap from "../../components/map/LiveTrackingMap"; // adjust path if your component lives elsewhere
-
+import EvidenceImageViewer from "../../components/common/EvidenceImageViewer";
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const cls = {
@@ -192,7 +192,7 @@ export default function AdminEmergencies() {
     "Driver Contact": em.ambulance?.contact || em.ambulance?.mobile,
     "Vehicle Number": em.ambulance?.vehicleNumber,
     Coordinates: em.location ? `${em.location.latitude}, ${em.location.longitude}` : "N/A",
-    Image: em.imageUrl || "N/A",
+    
     "Created Date": formatDate(em.createdAt),
   });
 
@@ -373,8 +373,23 @@ export default function AdminEmergencies() {
       </div>
 
       {selectedEmergency && (
-        <AdminModal title="Emergency Details" subtitle="Full alert details from the backend" onClose={() => setSelectedEmergency(null)}>
-          <AdminDetailGrid data={getDetails(selectedEmergency)} />
+        <AdminModal
+          title="Emergency Details"
+          subtitle="Full alert details from the backend"
+          onClose={() => setSelectedEmergency(null)}
+        >
+          <div className="space-y-6">
+
+            <EvidenceImageViewer
+              mainImage={selectedEmergency.imageUrl}
+              evidence={selectedEmergency.evidence || []}
+            />
+
+            <AdminDetailGrid
+              data={getDetails(selectedEmergency)}
+            />
+
+          </div>
         </AdminModal>
       )}
 

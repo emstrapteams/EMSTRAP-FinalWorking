@@ -13,6 +13,7 @@ import AdminAccidentHeatmap from "../../components/admin/AdminAccidentHeatmap";
 import AdminLayout from "../../components/admin/AdminLayout";
 import AdminStatCard from "../../components/admin/AdminStatCard";
 import AdminSurface from "../../components/admin/AdminSurface";
+import EvidenceImageViewer from "../../components/common/EvidenceImageViewer";
 import {
   getAdminStats,
   getOverviewStats,

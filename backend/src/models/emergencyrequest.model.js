@@ -12,12 +12,52 @@ const emergencyRequestSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    evidence: [
+      {
+        imageUrl: {
+          type: String,
+          required: true,
+        },
 
-    location: {
-      latitude: Number,
-      longitude: Number,
-    },
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
 
+        aiAnalysis: {
+          predictedClass: {
+            type: String,
+            default: "",
+          },
+
+          confidence: {
+            type: Number,
+            default: 0,
+          },
+
+          severity: {
+            type: String,
+            enum: [
+              "LOW",
+              "MODERATE",
+              "HIGH",
+              "CRITICAL",
+            ],
+            default: "LOW",
+          },
+
+          recommendedAmbulance: {
+            type: String,
+            default: "",
+          },
+
+          allProbabilities: {
+            type: Object,
+            default: {},
+          },
+        },
+      },
+    ],
     // AI Duplicate Detection Fields
     embedding: {
       type: [Number],

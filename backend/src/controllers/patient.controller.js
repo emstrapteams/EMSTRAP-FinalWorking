@@ -42,6 +42,17 @@ export const getPatients = async (req, res) => {
             admissionDate: record.createdAt,
 
             createdAt: record.createdAt,
+
+            // ===== NEW =====
+            imageUrl: record.imageUrl || "",
+
+            evidence: record.evidence || [],
+
+            aiAnalysis: record.aiAnalysis,
+
+            ambulance: record.ambulance,
+
+            hospital: record.hospital,
         }));
 
         res.status(200).json({

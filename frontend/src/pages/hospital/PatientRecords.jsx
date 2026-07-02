@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-
+import EvidenceImageViewer from "../../components/common/EvidenceImageViewer";
 // ── Chart.js via CDN is loaded externally; we use a simple canvas-based mini approach
 // ── For real projects, install: npm install chart.js react-chartjs-2
 
@@ -252,7 +252,17 @@ const PatientModal = ({ patient, onClose }) => {
             <button className="pr-btn pr-btn-ghost" onClick={onClose} style={{ fontSize:20, padding:"4px 8px" }}>×</button>
           </div>
         </div>
-        <div style={{ padding:"24px 28px" }}>
+        <div style={{ padding: "24px 28px" }}>
+
+          {patient.imageUrl && (
+            <div style={{ marginBottom: 24 }}>
+              <EvidenceImageViewer
+                mainImage={patient.imageUrl}
+                evidence={patient.evidence || []}
+              />
+            </div>
+          )}
+
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 24px" }}>
             {field("Age", patient.age)}
             {field("Gender", patient.gender)}

@@ -247,5 +247,17 @@ export const precheckEmergency = async (data) => {
 
   return response.data;
 };
+
+export const uploadEvidence = async (requestId, imageUrl) => {
+  const res = await API.post(
+    `/api/emergency/${requestId}/evidence`,
+    {
+      imageUrl,
+    }
+  );
+
+  return res.data;
+};
+
 export default API;
 
