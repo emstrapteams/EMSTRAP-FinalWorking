@@ -254,7 +254,9 @@ export default function AmbulanceDashboard() {
   const [requests, setRequests] = useState([]);
   const [acceptedHistory, setAcceptedHistory] = useState([]);
   const [socket, setSocket] = useState(null);
-
+  const alarmRef = useRef(
+    new Audio("/sounds/emergency-alert.mp3")
+  );
   const [activeTab, setActiveTab] = useState("dashboard");
   const [historyTab, setHistoryTab] = useState("all");
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -271,7 +273,10 @@ export default function AmbulanceDashboard() {
   const watchIdRef = useRef(null);
 
   const EXPIRY_MS = 30 * 60 * 1000;
-
+  useEffect(() => {
+    alarmRef.current.loop = true;
+    alarmRef.current.volume = 1;
+  }, []);
   const getPaymentInfo = (req) => {
     const transactionId =
       req.transactionId || req.paymentId ||
@@ -355,11 +360,51 @@ export default function AmbulanceDashboard() {
     if (socket) { socket.off("user_location"); socket.off("emergency_cancelled"); }
   };
 
+  const startEmergencyAlert = async () => {
+    try {
+      await alarmRef.current.play();
+    } catch (e) {
+      console.log("Autoplay blocked");
+    }
+
+    if ("vibrate" in navigator) {
+      navigator.vibrate([
+        500,
+        300,
+        500,
+        300,
+        500,
+        300,
+        500,
+      ]);
+    }
+
+    if (Notification.permission === "granted") {
+      new Notification("🚑 New Emergency", {
+        body: "A new emergency request has arrived.",
+        icon: "/logo.png",
+      });
+    }
+  };
+
+  const stopEmergencyAlert = () => {
+    alarmRef.current.pause();
+    alarmRef.current.currentTime = 0;
+
+    if ("vibrate" in navigator) {
+      navigator.vibrate(0);
+    }
+  };
+
   useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
     fetchHistory();
     const newSocket = io(API_URL, { withCredentials: true });
     setSocket(newSocket);
     newSocket.on("new_emergency_request", (data) => {
+      startEmergencyAlert();
       const isEmergency = data.requestType === "EMERGENCY";
       const fareNote = !isEmergency && data.estimatedPrice ? ` — ₹${data.estimatedPrice}` : "";
       toast.success(isEmergency ? "NEW EMERGENCY ALERT!" : `New Ambulance Booking Request!${fareNote}`, {
@@ -371,7 +416,12 @@ export default function AmbulanceDashboard() {
       setRequests((prev) => prev.find(r => r._id === data._id) ? prev : [data, ...prev]);
     });
     newSocket.on("emergency_accepted", (data) => {
-      setRequests((prev) => prev.filter(r => r._id !== data.requestId));
+
+      stopEmergencyAlert();
+
+      setRequests((prev) =>
+        prev.filter(r => r._id !== data.requestId)
+      );
     });
     return () => {
       newSocket.close();
@@ -406,6 +456,7 @@ export default function AmbulanceDashboard() {
     try {
       const res = await acceptEmergency(id);
       toast.success("Emergency accepted!");
+      stopEmergencyAlert();
       setAcceptedHistory([res.data || res, ...acceptedHistory]);
       setRequests(requests.filter(r => r._id !== id));
       if (socket) startTracking(id);
@@ -550,7 +601,12 @@ export default function AmbulanceDashboard() {
   const handleLogout = async () => {
     try {
       await API.post("/auth/logout");
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
+
+    stopEmergencyAlert();
+
     logoutUser?.();
   };
   const getSeverityPriority = (severity) => {
