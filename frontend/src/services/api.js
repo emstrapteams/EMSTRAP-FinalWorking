@@ -95,6 +95,13 @@ export const cancelEmergency = async (id) => {
   const res = await API.put(`/api/emergency/${id}/cancel`);
   return res.data;
 };
+export const cancelEmergencyByUser = async (id) => {
+  const res = await API.put(
+    `/api/emergency/${id}/user-cancel`
+  );
+
+  return res.data;
+};
 
 export const markArrivedAPI = async (id) => {
   const res = await API.put(`/api/emergency/${id}/mark-arrived`);
@@ -256,6 +263,11 @@ export const uploadEvidence = async (requestId, imageUrl) => {
     }
   );
 
+  return res.data;
+};
+
+export const declineBooking = async (id) => {
+  const res = await API.put(`/api/bookings/${id}/decline`);
   return res.data;
 };
 

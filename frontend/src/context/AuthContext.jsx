@@ -12,11 +12,24 @@ export function AuthProvider({ children }) {
   // Restore session via HttpOnly Cookie using /auth/me
   useEffect(() => {
     const fetchSession = async () => {
+
+      const token = window.localStorage.getItem("authToken");
+
+      // Anonymous visitor
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await API.get("/auth/me");
-        setUser(res.data);
+        setUser(res.data.user || res.data);
       } catch (err) {
-        setUser(null); // No valid session
+
+        // Token expired or invalid
+        window.localStorage.removeItem("authToken");
+        setUser(null);
+
       } finally {
         setLoading(false);
       }
@@ -24,7 +37,6 @@ export function AuthProvider({ children }) {
 
     fetchSession();
   }, []);
-
   const loginUser = (data) => {
 
     const nextUser = data?.user || data;

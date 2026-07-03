@@ -32,6 +32,7 @@ import {
   TrendingUp,
   IndianRupee,
 } from "lucide-react";
+import { declineBooking } from "../../services/api";
 
 // ─── Status Config ────────────────────────────────────────────────────────────
 
@@ -51,7 +52,6 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
-
   const [profileImage, setProfileImage] = useState(
     () => localStorage.getItem(`profileImage_${user?._id}`) || null
   );
@@ -74,6 +74,8 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -427,10 +429,23 @@ export default function PrivateDriverDashboard() {
   // Socket
   const socketRef = useRef(null);
 
+  const alarmRef = useRef(
+    new Audio("/sounds/private-driver-alert.mp3")
+  );
+  useEffect(() => {
+    alarmRef.current.loop = true;
+    alarmRef.current.volume = 1;
+  }, []);
+  const busyRef = useRef(false);
+
   // ── Derived: current active assignment (ACCEPTED / ARRIVED / IN_PROGRESS) ──
   const currentAssignment = acceptedBookings.find((b) =>
     ["ACCEPTED", "ARRIVED", "IN_PROGRESS"].includes(b.status)
   ) || null;
+
+  useEffect(() => {
+    busyRef.current = !!currentAssignment;
+  }, [currentAssignment]);
 
   // ── Map destination based on status ──
   const mapDestination = currentAssignment
@@ -499,18 +514,69 @@ export default function PrivateDriverDashboard() {
     setDriverLocation(null);
   };
 
-  // ── Effects ──
+  const startEmergencyAlert = async () => {
+    try {
+      alarmRef.current.currentTime = 0;
+      await alarmRef.current.play();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const stopEmergencyAlert = () => {
+    alarmRef.current.pause();
+    alarmRef.current.currentTime = 0;
+
+    if ("vibrate" in navigator) {
+      navigator.vibrate(0);
+    }
+  };
+
   useEffect(() => {
+
+    if (
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
+      Notification.requestPermission();
+    }
+
     fetchDashboard();
+
     const interval = setInterval(fetchDashboard, 5000);
 
     const socket = io(API_URL, { withCredentials: true });
     socketRef.current = socket;
 
-    socket.on("new_booking_request", () => fetchDashboard());
+    socket.on("new_booking_request", (data) => {
 
+      fetchDashboard();
+
+      if (!busyRef.current) {
+
+        startEmergencyAlert(); // your private-driver MP3
+
+        if (Notification.permission === "granted") {
+          new Notification("🚑 New Booking Request", {
+            body: "A new ambulance booking has been assigned to you.",
+            icon: "/logo.png",
+            badge: "/logo.png",
+            requireInteraction: true,
+          });
+        }
+
+        if ("vibrate" in navigator) {
+          navigator.vibrate([500, 300, 500]);
+        }
+      }
+    });
+    socket.on("booking_declined", () => {
+      fetchDashboard();
+    });
+    
     return () => {
       clearInterval(interval);
+      stopEmergencyAlert();
       socket.disconnect();
       stopGPSTracking();
     };
@@ -521,6 +587,8 @@ export default function PrivateDriverDashboard() {
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket || !user) return;
+    console.log("ROLE:", user.role);
+    console.log("STATUS:", user.driverStatus);
     if (user.driverStatus === "LIVE") {
       socket.emit("join_private_driver", {});
       fetchDashboard();
@@ -544,6 +612,7 @@ export default function PrivateDriverDashboard() {
   const handleAccept = async (bookingId) => {
     try {
       await API.put(`/api/bookings/${bookingId}/accept`);
+      stopEmergencyAlert();
       toast.success("Booking accepted! Navigate to pickup location.");
       fetchDashboard();
     } catch {
@@ -609,6 +678,7 @@ export default function PrivateDriverDashboard() {
       toast.success("Trip completed! You are now available for new requests.", { id: tid });
       stopGPSTracking();
       fetchDashboard();
+      stopEmergencyAlert();
     } catch {
       toast.error("Failed to complete trip", { id: tid });
     }
@@ -621,6 +691,9 @@ export default function PrivateDriverDashboard() {
     try {
       const res = await API.put("/auth/profile", { driverStatus: newStatus });
       if (res.data?.user) {
+        if (newStatus === "OFFLINE") {
+          stopEmergencyAlert();
+        }
         loginUser({ ...user, driverStatus: res.data.user.driverStatus });
         toast.success(`You are now ${newStatus}`, { id: tid });
       }
@@ -631,6 +704,8 @@ export default function PrivateDriverDashboard() {
 
   const handleLogout = async () => {
     try { await API.post("/auth/logout"); } catch { /* ignore */ }
+    stopEmergencyAlert();
+
     logoutUser?.();
   };
 
@@ -871,7 +946,21 @@ export default function PrivateDriverDashboard() {
                                 {/* Action buttons */}
                                 <div className="flex gap-2 pt-1">
                                   <button
-                                    onClick={() => setPendingBookings((prev) => prev.filter((b) => b._id !== booking._id))}
+                                    onClick={async () => {
+                                      try {
+                                        await declineBooking(booking._id);
+
+                                        stopEmergencyAlert();
+
+                                        fetchDashboard();
+
+                                        toast.success("Booking declined.");
+                                      } catch (err) {
+                                        console.error(err);
+                                        toast.error("Failed to decline booking.");
+                                      }
+                                    }}
+                                    
                                     className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl font-bold text-xs transition-colors border border-gray-200 dark:border-gray-700"
                                   >
                                     Decline

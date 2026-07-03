@@ -13,6 +13,7 @@ import {
     startBookingTrip,
     completeBooking,
     getPrivateDriverDashboard,
+    declineBooking,
 } from "../controllers/booking.controller.js";
 const router = express.Router();
 
@@ -32,4 +33,5 @@ router.put("/:id/accept", authMiddleware, acceptBooking);
 router.put("/:id/arrive", authMiddleware, arriveBooking);
 router.put("/:id/start", authMiddleware, startBookingTrip);
 router.put("/:id/complete", authMiddleware, completeBooking);
+router.put("/:id/decline", authMiddleware, declineBooking);
 export default router;

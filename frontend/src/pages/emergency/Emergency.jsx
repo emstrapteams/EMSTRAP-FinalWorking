@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import API, {
   API_URL,
-  cancelEmergency,
+  cancelEmergencyByUser,
   precheckEmergency,
   uploadEvidence,
 } from "../../services/api";
@@ -310,8 +310,10 @@ export default function Emergency() {
                 try {
                   const requestId = sessionStorage.getItem("emergency_requestId");
                   if (requestId) {
-                    await cancelEmergency(requestId);
+                    await cancelEmergencyByUser(requestId);
                     toast.success("Emergency cancelled successfully.");
+                    sessionStorage.removeItem("emergency_requestId");
+                    
                   }
                   resetEmergency();
                 } catch (err) {

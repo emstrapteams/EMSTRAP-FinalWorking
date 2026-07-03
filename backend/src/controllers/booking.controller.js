@@ -97,15 +97,36 @@ export const getBookings = async (req, res) => {
         // and only show those that are PENDING or ACCEPTED
         const standaloneEmergencies = await EmergencyRequest.find({
             user: req.user._id,
-            requestType: "EMERGENCY",
-            status: { $in: ["PENDING", "AMBULANCE_ACCEPTED"] }
+            requestType: "EMERGENCY"
         }).sort({ createdAt: -1 });
+
+        const mapEmergencyStatus = (status) => {
+            switch (status) {
+                case "PENDING":
+                    return "PENDING";
+
+                case "AMBULANCE_ACCEPTED":
+                case "ARRIVED_AT_LOCATION":
+                case "EN_ROUTE_TO_HOSPITAL":
+                    return "IN_PROGRESS";
+
+                case "COMPLETED":
+                    return "COMPLETED";
+
+                case "CANCELLED":
+                    return "CANCELLED";
+
+                default:
+                    return status;
+            }
+        };
 
         // Transform emergencies to match booking-like structure for the UI
         const transformedEmergencies = standaloneEmergencies.map(err => ({
             _id: err._id,
             requestId: err._id,
-            status: err.status === "AMBULANCE_ACCEPTED" ? "ACCEPTED" : err.status,
+            type: "emergency",
+            status: mapEmergencyStatus(err.status),
             ambulanceType: "EMERGENCY",
             pickupLocation: { address: "Live Emergency Location" },
             estimatedPrice: 0,
@@ -114,8 +135,16 @@ export const getBookings = async (req, res) => {
         }));
 
         // Combine and sort by date
-        const combined = [...bookings, ...transformedEmergencies].sort((a, b) =>
-            new Date(b.createdAt) - new Date(a.createdAt)
+        const transformedBookings = bookings.map(booking => ({
+            ...booking.toObject(),
+
+            type: "booking",
+
+            isEmergency: false
+        }));
+
+        const combined = [...transformedBookings, ...transformedEmergencies].sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
 
         res.status(200).json({
@@ -300,10 +329,13 @@ export const getAvailableBookings = async (req, res) => {
 
         const bookings = await Booking.find({
             status: "PENDING",
-            ambulance: null
+            ambulance: null,
+            declinedBy: {
+                $ne: req.user._id
+            }
         }).sort({ createdAt: -1 });
 
-        res.status(200).json({
+        res.json({
             success: true,
             data: bookings
         });
@@ -477,7 +509,11 @@ export const getPrivateDriverDashboard = async (req, res) => {
         const driverId = req.user._id;
 
         const pending = await Booking.find({
-            status: "PENDING"
+            status: "PENDING",
+            ambulance: null,
+            declinedBy: {
+                $ne: driverId
+            }
         }).sort({ createdAt: -1 });
 
         const accepted = await Booking.find({
@@ -497,6 +533,59 @@ export const getPrivateDriverDashboard = async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message
+        });
+    }
+};
+export const declineBooking = async (req, res) => {
+    try {
+        const bookingConnection = getBookingConnection();
+        const Booking = getBookingDbBookingModel(bookingConnection);
+
+        const booking = await Booking.findById(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: "Booking not found",
+            });
+        }
+
+        // Only pending bookings can be declined
+        if (booking.status !== "PENDING") {
+            return res.status(400).json({
+                success: false,
+                message: "Booking is no longer pending",
+            });
+        }
+
+        // Track who declined
+        if (!booking.declinedBy) {
+            booking.declinedBy = [];
+        }
+
+        const alreadyDeclined = booking.declinedBy.some(
+            id => id.toString() === req.user._id.toString()
+        );
+
+        if (!alreadyDeclined) {
+            booking.declinedBy.push(req.user._id);
+        }
+        await booking.save();
+        const io = getIO();
+
+        io.to("private_driver").emit("booking_declined", {
+            bookingId: booking._id,
+            driverId: req.user._id
+        });
+        res.json({
+            success: true,
+            message: "Booking declined",
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
         });
     }
 };

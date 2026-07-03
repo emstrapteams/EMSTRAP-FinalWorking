@@ -164,14 +164,35 @@ export const getEmergencyDetails = async (req, res) => {
       return res.status(404).json({ success: false, message: "Request not found" });
     }
 
-    const isOwner = request.user?.toString() === req.user._id.toString();
-    const isAssignedDriver = request.ambulance?.toString() === req.user._id.toString();
-    const isPrivileged = ["admin", "police", "police_hq", "hospital", "hospital_admin"].includes(req.user.role);
+    const isOwner =
+      req.user &&
+      request.user &&
+      request.user._id &&
+      request.user._id.toString() === req.user._id.toString();
 
-    if (!isOwner && !isAssignedDriver && !isPrivileged) {
-      return res.status(403).json({ success: false, message: "Not authorized to view this emergency" });
+    const isAssignedDriver =
+      req.user &&
+      request.ambulance &&
+      request.ambulance._id &&
+      request.ambulance._id.toString() === req.user._id.toString();
+    const isPrivileged =
+      req.user &&
+      ["admin", "police", "police_hq", "hospital", "hospital_admin"].includes(req.user.role);
+
+    // Allow anonymous access for active emergencies
+    if (!req.user) {
+      return res.status(200).json({
+        success: true,
+        data: request,
+      });
     }
 
+    if (!isOwner && !isAssignedDriver && !isPrivileged) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view this emergency",
+      });
+    }
     res.status(200).json({ success: true, data: request });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -601,10 +622,32 @@ export const cancelEmergency = async (req, res) => {
     }
 
     request.status = "CANCELLED";
+    request.ambulance = null;
+    request.hospital = null;
+
     await request.save();
 
     const io = getIO();
+    // Notify all ambulance dashboards
+    io.to("ambulance").emit("emergency_cancelled", {
+      requestId: id,
+    });
 
+    // Notify hospital dashboards
+    io.to("hospital").emit("hospital_case_cancelled", {
+      requestId: id,
+    });
+
+    // Notify police dashboards
+    io.to("police").emit("police_case_cancelled", {
+      requestId: id,
+    });
+
+    // Notify this user's tracking page
+    io.to(`request_${id}`).emit("emergency_cancelled", {
+      requestId: id,
+      status: "CANCELLED",
+    });
     io.to(`request_${id}`).emit("emergency_cancelled", {
       requestId: id
     });
@@ -632,6 +675,62 @@ export const cancelEmergency = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+export const cancelEmergencyByUser = async (req, res) => {
+  console.log("USER CANCEL API HIT");
+  try {
+    const { id } = req.params;
+
+    const request = await emergencyRequestSchema.findById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Emergency not found",
+      });
+    }
+
+    // User can cancel only before a driver accepts
+    // Don't allow cancelling if already finished
+    if (
+      request.status === "COMPLETED" ||
+      request.status === "CANCELLED"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Emergency already closed.",
+      });
+    }
+
+    request.status = "CANCELLED";
+    await request.save();
+
+    const io = getIO();
+
+    // Remove from ambulance dashboards
+    io.to("ambulance").emit("emergency_cancelled", {
+      requestId: id,
+    });
+
+    // Update user's tracking page
+    io.to(`request_${id}`).emit("emergency_cancelled", {
+      requestId: id,
+      status: "CANCELLED",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Emergency cancelled successfully.",
+      data: request,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

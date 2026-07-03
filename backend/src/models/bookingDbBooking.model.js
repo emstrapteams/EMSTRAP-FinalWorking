@@ -58,6 +58,11 @@ const bookingSchema = new Schema(
             type: Schema.Types.ObjectId,
             required: false,
         },
+        declinedBy: [{
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: []
+        }]
     },
     { timestamps: true }
 );

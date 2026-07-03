@@ -117,7 +117,30 @@ export default function UserDashboard() {
       toast.error("Failed to cancel booking", { id: loadingToast });
     }
   };
+  const handleEmergencyCancel = async (id) => {
+    const loadingToast = toast.loading("Cancelling emergency...");
 
+    try {
+      await API.put(`/api/emergency/${id}/user-cancel`);
+
+      setBookings((prev) =>
+        prev.map((item) =>
+          item._id === id
+            ? { ...item, status: "CANCELLED" }
+            : item
+        )
+      );
+
+      toast.success("Emergency cancelled successfully", {
+        id: loadingToast,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to cancel emergency", {
+        id: loadingToast,
+      });
+    }
+  };
   const [activeFilter, setActiveFilter] = useState("total");
 
   const STAT_FILTERS = {
@@ -303,10 +326,16 @@ export default function UserDashboard() {
                               </Link>
                             )}
                             <button
-                              onClick={() => handleCancel(b._id)}
+                              onClick={() => {
+                                if (b.type === "emergency") {
+                                  handleEmergencyCancel(b._id);
+                                } else {
+                                  handleCancel(b._id);
+                                }
+                              }}
                               className="text-red-600 hover:text-red-700 text-xs font-bold underline"
                             >
-                              Cancel Booking
+                              {b.type === "emergency" ? "Cancel Emergency" : "Cancel Booking"}
                             </button>
                           </div>
                         )}

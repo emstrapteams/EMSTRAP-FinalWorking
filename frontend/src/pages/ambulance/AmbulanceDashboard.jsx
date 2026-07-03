@@ -257,6 +257,7 @@ export default function AmbulanceDashboard() {
   const alarmRef = useRef(
     new Audio("/sounds/emergency-alert.mp3")
   );
+  const isPageVisible = useRef(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [historyTab, setHistoryTab] = useState("all");
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -271,11 +272,35 @@ export default function AmbulanceDashboard() {
   const [driverLocation, setDriverLocation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const watchIdRef = useRef(null);
-
+  const busyRef = useRef(false);
+  const currentAssignment =
+    acceptedHistory.find(req =>
+      [
+        "AMBULANCE_ACCEPTED",
+        "ARRIVED_AT_LOCATION",
+        "EN_ROUTE_TO_HOSPITAL",
+      ].includes(req.status)
+    ) || null;
   const EXPIRY_MS = 30 * 60 * 1000;
   useEffect(() => {
     alarmRef.current.loop = true;
     alarmRef.current.volume = 1;
+  }, []);
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageVisible.current = !document.hidden;
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    return () =>
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
   }, []);
   const getPaymentInfo = (req) => {
     const transactionId =
@@ -379,12 +404,6 @@ export default function AmbulanceDashboard() {
       ]);
     }
 
-    if (Notification.permission === "granted") {
-      new Notification("🚑 New Emergency", {
-        body: "A new emergency request has arrived.",
-        icon: "/logo.png",
-      });
-    }
   };
 
   const stopEmergencyAlert = () => {
@@ -395,7 +414,35 @@ export default function AmbulanceDashboard() {
       navigator.vibrate(0);
     }
   };
+  const showEmergencyNotification = (request) => {
 
+    // Driver is already looking at dashboard
+    if (isPageVisible.current) return;
+
+    if (!("Notification" in window)) return;
+
+    if (Notification.permission !== "granted") return;
+
+    const notification = new Notification(
+      "🚑 EMSTraP Emergency Alert",
+      {
+        body:
+          `${request.aiAnalysis?.severity || "UNKNOWN"} • ${request.aiAnalysis?.predictedClass || "Emergency"
+          }`,
+
+        icon: "/logo.png",
+
+        requireInteraction: true,
+
+        silent: false,
+      }
+    );
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+  };
   useEffect(() => {
     if ("Notification" in window) {
       Notification.requestPermission();
@@ -404,16 +451,42 @@ export default function AmbulanceDashboard() {
     const newSocket = io(API_URL, { withCredentials: true });
     setSocket(newSocket);
     newSocket.on("new_emergency_request", (data) => {
-      startEmergencyAlert();
-      const isEmergency = data.requestType === "EMERGENCY";
-      const fareNote = !isEmergency && data.estimatedPrice ? ` — ₹${data.estimatedPrice}` : "";
-      toast.success(isEmergency ? "NEW EMERGENCY ALERT!" : `New Ambulance Booking Request!${fareNote}`, {
-        duration: 6000,
-        icon: isEmergency
-          ? <Siren className="w-5 h-5 text-red-600" />
-          : <Calendar className="w-5 h-5 text-blue-600" />,
-      });
-      setRequests((prev) => prev.find(r => r._id === data._id) ? prev : [data, ...prev]);
+
+      console.log("New request received:", data);
+
+      // If driver is FREE -> play alarm + notification
+      if (!busyRef.current) {
+
+        startEmergencyAlert();
+
+        const isEmergency = data.requestType === "EMERGENCY";
+
+        const fareNote =
+          !isEmergency && data.estimatedPrice
+            ? ` — ₹${data.estimatedPrice}`
+            : "";
+
+        toast.success(
+          isEmergency
+            ? "NEW EMERGENCY ALERT!"
+            : `New Ambulance Booking Request!${fareNote}`,
+          {
+            duration: 6000,
+            icon: isEmergency
+              ? <Siren className="w-5 h-5 text-red-600" />
+              : <Calendar className="w-5 h-5 text-blue-600" />,
+          }
+        );
+
+        showEmergencyNotification(data);
+      }
+
+      // Always add the request to the Incoming Requests list
+      setRequests((prev) =>
+        prev.find((r) => r._id === data._id)
+          ? prev
+          : [data, ...prev]
+      );
     });
     newSocket.on("emergency_accepted", (data) => {
 
@@ -423,6 +496,22 @@ export default function AmbulanceDashboard() {
         prev.filter(r => r._id !== data.requestId)
       );
     });
+    newSocket.on("emergency_cancelled", (data) => {
+
+      stopEmergencyAlert();
+
+      toast.error("Emergency cancelled by user.");
+
+      setRequests((prev) =>
+        prev.filter((r) => r._id !== data.requestId)
+      );
+
+      setAcceptedHistory((prev) =>
+        prev.filter((r) => r._id !== data.requestId)
+      );
+
+    });
+
     return () => {
       newSocket.close();
       if (watchIdRef.current) {
@@ -443,13 +532,33 @@ export default function AmbulanceDashboard() {
     const active = acceptedHistory.find(r => ["AMBULANCE_ACCEPTED", "ARRIVED_AT_LOCATION", "EN_ROUTE_TO_HOSPITAL"].includes(r.status));
     if (active && !watchIdRef.current) startTracking(active._id);
   }, [socket, acceptedHistory]);
-
+  useEffect(() => {
+    busyRef.current = currentAssignment !== null;
+  }, [currentAssignment]);
   useEffect(() => {
     const interval = setInterval(() => {
+
       const now = Date.now();
-      setRequests((prev) => prev.filter(req => (now - new Date(req.createdAt).getTime()) <= EXPIRY_MS));
+
+      setRequests((prev) => {
+
+        const updated = prev.filter(
+          req =>
+            (now - new Date(req.createdAt).getTime()) <= EXPIRY_MS
+        );
+
+        // If every request expired, stop the alarm
+        if (updated.length === 0 && prev.length > 0) {
+          stopEmergencyAlert();
+        }
+
+        return updated;
+      });
+
     }, 10000);
+
     return () => clearInterval(interval);
+
   }, []);
 
   const handleAccept = async (id) => {
@@ -457,8 +566,11 @@ export default function AmbulanceDashboard() {
       const res = await acceptEmergency(id);
       toast.success("Emergency accepted!");
       stopEmergencyAlert();
-      setAcceptedHistory([res.data || res, ...acceptedHistory]);
-      setRequests(requests.filter(r => r._id !== id));
+      setAcceptedHistory((prev) => [res.data || res, ...prev]);
+
+      setRequests((prev) =>
+        prev.filter((r) => r._id !== id)
+      );
       if (socket) startTracking(id);
     } catch (error) {
       toast.error(error.response?.data?.message || "Error accepting request");
@@ -469,8 +581,11 @@ export default function AmbulanceDashboard() {
   const handleDecline = async (id) => {
     try {
       await declineEmergency(id);
+      stopEmergencyAlert();
       toast.success("Request declined");
-      setRequests(requests.filter(r => r._id !== id));
+      setRequests((prev) =>
+        prev.filter((r) => r._id !== id)
+      );
     } catch { toast.error("Error declining request"); }
   };
 
@@ -494,8 +609,17 @@ export default function AmbulanceDashboard() {
     const tid = toast.loading("Cancelling assignment...");
     try {
       await cancelEmergency(currentAssignment._id);
-      toast.success("Assignment cancelled successfully", { id: tid });
-      stopTracking(); fetchHistory();
+
+      stopEmergencyAlert();
+
+      stopTracking();
+
+      await fetchHistory();
+
+      toast.success(
+        "Assignment cancelled successfully",
+        { id: tid }
+      );
     } catch { toast.error("Failed to cancel assignment", { id: tid }); }
   };
 
@@ -581,8 +705,15 @@ export default function AmbulanceDashboard() {
     const tid = toast.loading("Completing trip...");
     try {
       await completeEmergencyAPI(currentAssignment._id);
-      toast.success("Trip completed! You are now available for new requests.", { id: tid });
-      stopTracking(); fetchHistory();
+
+      stopTracking();
+
+      await fetchHistory();
+
+      toast.success(
+        "Trip completed! You are now available for new requests.",
+        { id: tid }
+      );
     } catch { toast.error("Failed to complete trip", { id: tid }); }
   };
 
@@ -634,9 +765,7 @@ export default function AmbulanceDashboard() {
 
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
-  const currentAssignment = acceptedHistory.find(req =>
-    ["AMBULANCE_ACCEPTED", "ARRIVED_AT_LOCATION", "EN_ROUTE_TO_HOSPITAL"].includes(req.status)
-  ) || null;
+  
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
@@ -881,7 +1010,16 @@ export default function AmbulanceDashboard() {
                               </div>
                               <div className="flex gap-2">
                                 <button onClick={() => handleDecline(req._id)} className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 py-2 rounded-xl font-bold text-xs transition-colors border border-gray-200 dark:border-gray-700">Decline</button>
-                                <button onClick={() => handleAccept(req._id)} className="flex-[2] bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:opacity-90 text-white py-2 rounded-xl font-bold text-xs shadow-md shadow-indigo-500/10 transition-all">ACCEPT</button>
+                                <button
+                                  onClick={() => handleAccept(req._id)}
+                                  disabled={busyRef.current}
+                                  className={`flex-[2] py-2 rounded-xl font-bold text-xs transition-all ${busyRef.current
+                                      ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+                                      : "bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:opacity-90 text-white shadow-md shadow-indigo-500/10"
+                                    }`}
+                                >
+                                  {busyRef.current ? "ON TRIP" : "ACCEPT"}
+                                </button>
                               </div>
                             </div>
                           </div>
