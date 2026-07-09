@@ -25,27 +25,33 @@ with open("classes.json", "r") as f:
 # -------------------------
 # Load EfficientNet Model
 # -------------------------
-model = efficientnet_b0(weights=None)
+model = None
 
-num_features = model.classifier[1].in_features
+def get_classifier():
+    global model
 
-model.classifier[1] = nn.Linear(
-    num_features,
-    len(CLASSES)
-)
+    if model is None:
 
-model.load_state_dict(
-    torch.load(
-        "emstrap_best.pth",
-        map_location=device
-    )
-)
-print("✅ Loaded model: emstrap_best.pth")
-print("📁 Classes:", CLASSES)
+        model = efficientnet_b0(weights=None)
 
-model.to(device)
+        num_features = model.classifier[1].in_features
 
-model.eval()
+        model.classifier[1] = nn.Linear(
+            num_features,
+            len(CLASSES)
+        )
+
+        model.load_state_dict(
+            torch.load(
+                "emstrap_best.pth",
+                map_location=device
+            )
+        )
+
+        model.to(device)
+        model.eval()
+
+    return model
 
 
 # -------------------------
@@ -73,6 +79,8 @@ def classify_image_from_url(image_url):
     image_tensor = transform(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
+
+        model = get_classifier()
 
         outputs = model(image_tensor)
 
