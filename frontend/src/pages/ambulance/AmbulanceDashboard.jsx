@@ -92,7 +92,7 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
       />
 
       {/* Left: Logo */}
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+      <div className="flex items-center gap-4 shrink-0">
         <a href="/" className="flex items-center shrink-0">
           <img src={logo} alt="AmbuGo" className="h-10 w-auto object-contain" />
         </a>
@@ -100,7 +100,7 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
       </div>
 
       {/* Center: Nav tabs */}
-      <nav className="flex items-center gap-1 justify-center shrink-0">
+      <nav className="flex items-center gap-1 ml-auto mr-3">
         <button
           onClick={() => setActiveTab("dashboard")}
           className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
@@ -109,7 +109,7 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
           }`}
         >
-          <LayoutDashboard className={`w-4 h-4 shrink-0 ${activeTab === "dashboard" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`} />
+          
           <span className="hidden sm:inline">Dashboard</span>
         </button>
 
@@ -121,13 +121,13 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
           }`}
         >
-          <Calendar className={`w-4 h-4 shrink-0 ${activeTab === "history" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`} />
-          <span className="hidden sm:inline">Booking History</span>
+        
+          <span className="hidden sm:inline">Emergency History</span>
         </button>
       </nav>
 
       {/* Right: status pill + bell + avatar */}
-      <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
+      <div className="flex items-center gap-2 shrink-0">
 
         {/* Online/Offline pill */}
         <button
@@ -262,7 +262,44 @@ const getGoogleMapsUrl = (item, driverLocation, driverProfile) => {
   }
   return `https://www.google.com/maps/dir/?api=1&origin=${startLat || ""},${startLng || ""}&destination=${dest}&travelmode=driving`;
 };
+const getEmergencyTheme = (type) => {
+  switch (type) {
+    case "fire":
+      return {
+        border: "border-red-500",
+        header: "from-red-500 to-rose-600",
+        badge: "bg-red-100 text-red-700 border border-red-300",
+      };
 
+    case "accident":
+      return {
+        border: "border-orange-500",
+        header: "from-orange-500 to-amber-600",
+        badge: "bg-orange-100 text-orange-700 border border-orange-300",
+      };
+
+    case "Human_Emergency":
+      return {
+        border: "border-blue-500",
+        header: "from-blue-500 to-cyan-600",
+        badge: "bg-blue-100 text-blue-700 border border-blue-300",
+      };
+
+    case "non_emergency":
+      return {
+        border: "border-green-500",
+        header: "from-green-500 to-emerald-600",
+        badge: "bg-green-100 text-green-700 border border-green-300",
+      };
+
+    default:
+      return {
+        border: "border-red-500",
+        header: "from-red-500 to-rose-600",
+        badge: "bg-red-100 text-red-700 border border-red-300",
+      };
+  }
+};
 export default function AmbulanceDashboard() {
   const { user, loginUser, logoutUser } = useAuth();
   const [requests, setRequests] = useState([]);
@@ -954,15 +991,24 @@ export default function AmbulanceDashboard() {
                   ) : (
                     <div className="space-y-3">
                         {sortedRequests.map((req) => {
+                          const theme = getEmergencyTheme(
+                            req.aiAnalysis?.predictedClass
+                          );
                         const payment = getPaymentInfo(req);
                         return (
-                          <div key={req._id} className={`bg-white dark:bg-gray-900 border-2 ${req.requestType === "EMERGENCY" ? "border-red-500" : "border-blue-500"} rounded-2xl shadow-md overflow-hidden flex flex-col`}>
-                            <div className={`${req.requestType === "EMERGENCY" ? "bg-gradient-to-r from-red-500 to-rose-600 animate-pulse" : "bg-gradient-to-r from-blue-500 to-indigo-600"} px-3 py-1.5 flex items-center justify-center gap-1 text-white font-extrabold tracking-widest text-[9px] uppercase`}>
+                          <div key={req._id} className={`bg-white dark:bg-gray-900 border-2 ${req.requestType === "EMERGENCY"
+                              ? theme.border
+                              : "border-blue-500"
+} rounded-2xl shadow-md overflow-hidden flex flex-col`}>
+                            <div className={`${req.requestType === "EMERGENCY"
+                                ? `bg-gradient-to-r ${theme.header} animate-pulse`
+                                : "bg-gradient-to-r from-blue-500 to-indigo-600"
+} px-3 py-1.5 flex items-center justify-center gap-1 text-white font-extrabold tracking-widest text-[9px] uppercase`}>
                               {req.requestType === "EMERGENCY" ? <>
                                 <Siren className="w-3 h-3" />
-                                {req.aiAnalysis?.predictedClass
-                                  ? req.aiAnalysis.predictedClass.replace("_", " ").toUpperCase()
-                                  : "NEW EMERGENCY"}
+                                <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${theme.badge}`}>
+                                  {req.aiAnalysis?.predictedClass?.replace("_", " ") || "Emergency"}
+                                </span>
                               </> : <><Calendar className="w-3 h-3" /> Scheduled Booking</>}
                             </div>
                             <div className="p-3 flex-1 flex flex-col justify-between">

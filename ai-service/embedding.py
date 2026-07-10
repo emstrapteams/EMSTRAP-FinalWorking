@@ -31,8 +31,8 @@ def get_embedding_from_url(image_url):
     model = get_model()
 
     with torch.no_grad():
-    embedding = model(image_tensor)
+        embedding = model(image_tensor)
 
-    embedding = embedding.squeeze().numpy()
+        embedding = embedding.squeeze().numpy()
 
     return embedding.tolist()

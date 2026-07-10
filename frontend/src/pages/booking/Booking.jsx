@@ -226,9 +226,7 @@ export default function Booking() {
 
                     {/* Header */}
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 shrink-0">
-                            <Truck size={22} />
-                        </div>
+
                         <div>
                             <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100">Book an Ambulance</h2>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Plan ahead with specific equipment needs and upfront pricing.</p>
@@ -312,8 +310,8 @@ export default function Booking() {
                                                     </span>
                                                 )}
                                                 <div className="flex items-center gap-3 mb-2">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${type.iconBgClass} ${type.textClass}`}>
-                                                        <Icon size={18} />
+                                                    <div className="flex items-center justify-center shrink-0">
+                                                        <Icon size={18} className="text-black dark:text-white" />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="font-bold text-gray-900 dark:text-gray-100 text-sm leading-tight">{type.label}</p>
@@ -336,7 +334,7 @@ export default function Booking() {
                             </div>
 
                             {/* Price Quote */}
-                            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+                            <div className="rounded-2xl p-6 shadow-xl relative overflow-hidden">
                                 <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full blur-2xl"></div>
                                 <div className="flex items-center justify-between relative z-10 gap-4">
                                     <div className="min-w-0">

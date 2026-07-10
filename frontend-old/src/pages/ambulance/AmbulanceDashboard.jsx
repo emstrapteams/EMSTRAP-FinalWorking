@@ -489,7 +489,7 @@ export default function AmbulanceDashboard() {
             {!currentAssignment && requests.map((req) => (
               <div key={req._id} className={`mx-auto w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 ${req.requestType === "EMERGENCY" ? "border-red-500" : "border-blue-500"} overflow-hidden pointer-events-auto transform transition-all translate-y-0 opacity-100 animate-slide-up`}>
                 <div className={`${req.requestType === "EMERGENCY" ? "bg-red-500 animate-pulse" : "bg-blue-500"} p-2.5 text-center text-white font-bold tracking-widest text-sm`}>
-                  {req.requestType === "EMERGENCY" ? "🚨 NEW EMERGENCY" : "📅 NEW BOOKING"}
+                  {req.requestType === "EMERGENCY" ? "🚨 NEW EMERGENCY" : "📅 "}
                 </div>
                 <div className="p-4">
                   <p className="text-gray-800 dark:text-gray-200 font-medium mb-1">

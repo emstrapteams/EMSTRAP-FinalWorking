@@ -241,7 +241,7 @@ export default function UserDashboard() {
         {/* Welcome header */}
         <div className="mt-10 mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            Welcome Back <span role="img" aria-label="wave">👋</span>
+            Welcome Back
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Manage bookings, track ambulances and monitor emergency requests.

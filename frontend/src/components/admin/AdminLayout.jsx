@@ -134,7 +134,7 @@ export default function AdminLayout({ title, description, actions, children }) {
         </div>
 
         {/* Desktop nav pills */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2 ml-auto mr-6">
           <Link to="/admin/overview" className={navLinkClasses(isOverviewActive)}>
             <BarChart3 className="w-5 h-5" />
             <span>Overview</span>

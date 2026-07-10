@@ -119,7 +119,7 @@ export default function UserDashboard() {
 
             <div>
               <h1 className="text-4xl font-black tracking-tight text-gray-900 dark:text-white">
-                Welcome Back 👋
+                Welcome Back
               </h1>
 
               <p className="text-gray-500 dark:text-gray-400 mt-2">

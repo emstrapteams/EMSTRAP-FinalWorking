@@ -148,22 +148,23 @@ const icons = {
 function StatCard({ item, value }) {
   return (
     <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 flex flex-col gap-3 hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-gray-100/80 dark:hover:shadow-black/20">
-      <div className="flex items-start justify-between">
-        <div className={`h-10 w-10 rounded-xl ${item.iconBg} flex items-center justify-center ${item.iconColor}`}>
+      <div className="flex items-center gap-4">
+        <div className="h-10 w-10 flex items-center justify-center text-black dark:text-white shrink-0">
           {icons[item.key]}
         </div>
-        <span className={`inline-flex items-center rounded-full bg-gradient-to-r ${item.accent} px-2.5 py-0.5 text-[10px] font-black text-white uppercase tracking-wide`}>
-          Live
-        </span>
-      </div>
-      <div>
-        <p className="text-3xl font-black text-gray-900 dark:text-white tabular-nums">{value.toLocaleString()}</p>
-        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mt-1 uppercase tracking-wide">{item.helper}</p>
+
+        <div>
+          <p className="text-3xl font-black text-gray-900 dark:text-white tabular-nums">
+            {value.toLocaleString()}
+          </p>
+          <p className="text-sm font-bold text-gray-900 dark:text-white">
+            {item.title}
+          </p>
+        </div>
       </div>
     </div>
   );
 }
-
 // ─── Chart Shell ──────────────────────────────────────────────────────────────
 
 const tooltipStyle = {

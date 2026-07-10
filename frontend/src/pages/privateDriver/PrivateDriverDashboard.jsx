@@ -114,7 +114,7 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
       />
 
       {/* Logo */}
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+      <div className="flex items-center gap-4 shrink-0">
         <a href="/" className="flex items-center shrink-0">
           <img src={logo} alt="EMSTRAP" className="h-10 w-auto object-contain" />
         </a>
@@ -122,7 +122,7 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
       </div>
 
       {/* Nav tabs */}
-      <nav className="flex items-center gap-1 justify-center shrink-0">
+      <nav className="flex items-center gap-1 ml-auto mr-3">
         <button
           onClick={() => setActiveTab("dashboard")}
           className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
@@ -131,7 +131,7 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           }`}
         >
-          <LayoutDashboard className="w-4 h-4 shrink-0" />
+          
           <span className="hidden sm:inline">Dashboard</span>
         </button>
 
@@ -143,13 +143,13 @@ function Header({ activeTab, setActiveTab, onHistoryClick, user, onToggleStatus,
               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           }`}
         >
-          <Calendar className="w-4 h-4 shrink-0" />
+          
           <span className="hidden sm:inline">Trip History</span>
         </button>
       </nav>
 
       {/* Right side */}
-      <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
+      <div className="flex items-center gap-2 shrink-0">
         {/* Online / Offline pill */}
         <button
           onClick={onToggleStatus}
@@ -568,7 +568,7 @@ export default function PrivateDriverDashboard() {
         startEmergencyAlert(); // your private-driver MP3
 
         if (Notification.permission === "granted") {
-          new Notification("🚑 New Booking Request", {
+          new Notification(" New Booking Request", {
             body: "A new ambulance booking has been assigned to you.",
             icon: "/logo.png",
             badge: "/logo.png",

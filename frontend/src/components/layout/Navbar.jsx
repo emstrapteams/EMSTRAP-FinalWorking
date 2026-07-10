@@ -117,61 +117,63 @@ export default function Navbar() {
 
             {/* Nav icons/links, inline in header instead of a sidebar drawer */}
             {!isAmbulanceRole && (
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 ml-auto mr-6">
                 {isPoliceContext ? (
                   <>
                     <Link to="/police" className={navLinkClasses(location.pathname === "/police")}>
-                      <LayoutDashboard className="w-5 h-5" />
                       <span>Dashboard</span>
                     </Link>
-                    <Link to="/police/map" className={navLinkClasses(location.pathname.startsWith("/police/map"))}>
-                      <Map className="w-5 h-5" />
+
+                    <Link
+                      to="/police/map"
+                      className={navLinkClasses(location.pathname.startsWith("/police/map"))}
+                    >
                       <span>Live Map</span>
                     </Link>
-                    <Link to="/police/settings" className={navLinkClasses(location.pathname.startsWith("/police/settings"))}>
-                      <Settings className="w-5 h-5" />
+
+                    <Link
+                      to="/police/settings"
+                      className={navLinkClasses(location.pathname.startsWith("/police/settings"))}
+                    >
                       <span>Settings</span>
                     </Link>
                   </>
                 ) : isHospitalContext ? (
                   <>
                     <Link to="/hospital" className={navLinkClasses(location.pathname === "/hospital")}>
-                      <LayoutDashboard className="w-5 h-5" />
-                      <span>Dashboard</span>
+                        <span>Dashboard</span>
                     </Link>
                     <Link to="/hospital/PatientRecords" className={navLinkClasses(location.pathname.startsWith("/hospital/PatientRecords"))}>
-                      <Users className="w-5 h-5" />
+                  
                       <span>Patient Records</span>
                     </Link>
                     <Link to="/hospital/map" className={navLinkClasses(location.pathname.startsWith("/hospital/map"))}>
-                      <Map className="w-5 h-5" />
                       <span>Live Map</span>
                     </Link>
                     <Link to="/hospital/settings" className={navLinkClasses(location.pathname.startsWith("/hospital/settings"))}>
-                      <Settings className="w-5 h-5" />
                       <span>Settings</span>
                     </Link>
                   </>
                 ) : (
                   <>
-                    {(!user || user?.role === 'user') && (
-                      <Link to="/" className={navLinkClasses(location.pathname === "/")}>
-                        <Siren className="w-5 h-5" />
-                        <span>Emergency</span>
-                      </Link>
-                    )}
-                    {user?.role === 'user' && (
-                      <Link to="/dashboard" className={navLinkClasses(location.pathname === "/dashboard")}>
-                        <LayoutDashboard className="w-5 h-5" />
-                        <span>Dashboard</span>
-                      </Link>
-                    )}
-                    {user?.role === 'user' && (
-                      <Link to="/booking" className={navLinkClasses(location.pathname === "/booking")}>
-                        <CalendarPlus className="w-5 h-5" />
-                        <span>New Booking</span>
-                      </Link>
-                    )}
+                        {(!user || user?.role === 'user') && (
+                          <Link to="/" className={navLinkClasses(location.pathname === "/")}>
+                            <span>Emergency</span>
+                          </Link>
+                        )}
+
+                        {user?.role === 'user' && (
+                          <Link to="/dashboard" className={navLinkClasses(location.pathname === "/dashboard")}>
+                            <span>Dashboard</span>
+                          </Link>
+                        )}
+
+                        {user?.role === 'user' && (
+                          <Link to="/booking" className={navLinkClasses(location.pathname === "/booking")}>
+                            <span>New Booking</span>
+                          </Link>
+                        )}
+                    
                   </>
                 )}
               </div>

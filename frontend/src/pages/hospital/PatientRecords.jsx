@@ -473,7 +473,7 @@ export default function PatientRecords() {
             className="pr-btn pr-btn-primary"
             onClick={() => setView(v => v==="analytics"?"records":"analytics")}
           >
-            {view==="analytics" ? "← Records" : "📊 View Analytics"}
+            {view==="analytics" ? "← Records" : " View Analytics"}
           </button>
         </div>
 
