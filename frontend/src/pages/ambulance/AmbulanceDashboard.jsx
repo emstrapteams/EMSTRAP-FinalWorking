@@ -264,25 +264,19 @@ const getGoogleMapsUrl = (item, driverLocation, driverProfile) => {
 };
 const getEmergencyTheme = (type) => {
   switch (type) {
-    case "fire":
+    case "accident":
+    case "Human_Emergency":
       return {
         border: "border-red-500",
         header: "from-red-500 to-rose-600",
         badge: "bg-red-100 text-red-700 border border-red-300",
       };
 
-    case "accident":
+    case "fire":
       return {
         border: "border-orange-500",
         header: "from-orange-500 to-amber-600",
         badge: "bg-orange-100 text-orange-700 border border-orange-300",
-      };
-
-    case "Human_Emergency":
-      return {
-        border: "border-blue-500",
-        header: "from-blue-500 to-cyan-600",
-        badge: "bg-blue-100 text-blue-700 border border-blue-300",
       };
 
     case "non_emergency":
@@ -294,9 +288,9 @@ const getEmergencyTheme = (type) => {
 
     default:
       return {
-        border: "border-red-500",
-        header: "from-red-500 to-rose-600",
-        badge: "bg-red-100 text-red-700 border border-red-300",
+        border: "border-gray-500",
+        header: "from-gray-500 to-gray-600",
+        badge: "bg-gray-100 text-gray-700 border border-gray-300",
       };
   }
 };
