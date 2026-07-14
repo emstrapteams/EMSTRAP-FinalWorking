@@ -108,7 +108,7 @@ export const registerUser = async (req, res) => {
     const htmlMessage = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <p style="color: #555; font-size: 16px;">Hello ${name},</p>
-        <p style="color: #555; font-size: 16px;">Welcome to Emstrap! We’re excited to have you on board.</p>
+        <p style="color: #555; font-size: 16px;">Welcome to <strong>EMSTRAP PVT LTD</strong>! We’re excited to have you on board.</p>
         <p style="color: #555; font-size: 16px;">To get started and gain full access to your account, please verify your email address by clicking the button below:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${verifyUrl}" style="background-color: #007BFF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold; display: inline-block;">Verify Email Address</a>

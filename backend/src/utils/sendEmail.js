@@ -42,7 +42,7 @@ const sendEmail = async (options) => {
     const transporter = nodemailer.createTransport(transporterConfig);
 
     const message = {
-        from: `${'EmSTraP Emergency Services'} <${process.env.EMAIL_USER}>`,
+        from: `${'EMSTRAP PVT LTD'} <${process.env.EMAIL_USER}>`,
         to: options.email,
         subject: options.subject,
         text: options.message,
