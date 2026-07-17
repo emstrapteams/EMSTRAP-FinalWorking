@@ -3,8 +3,7 @@ import { AI_SERVICE_URL } from "../config/ai.js";
 
 export const generateEmbedding = async (imageUrl) => {
     if (process.env.ENABLE_AI !== "true") {
-        console.log("AI Service is disabled. Returning mock embedding.");
-        return Array.from({ length: 128 }, () => Math.random());
+        throw new Error("AI service is disabled.");
     }
     try {
         const response = await axios.post(
@@ -28,8 +27,7 @@ export const compareEmbeddings = async (
     embedding2
 ) => {
     if (process.env.ENABLE_AI !== "true") {
-        console.log("AI Service is disabled. Returning mock similarity.");
-        return 0.1; // Low similarity fallback
+        throw new Error("AI service is disabled.");
     }
     try {
         const response = await axios.post(

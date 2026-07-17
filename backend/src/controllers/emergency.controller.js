@@ -556,18 +556,24 @@ export const uploadEvidence = async (req, res) => {
     }
 
     // Classification ONLY
-    const aiAnalysis = await classifyImage(secureImageUrl);
+    let aiAnalysis = null;
+    if (process.env.ENABLE_AI === "true") {
+      try {
+        aiAnalysis = await classifyImage(secureImageUrl);
+      } catch (err) {
+        console.warn("AI Classification failed for evidence:", err.message);
+      }
+    }
 
     emergency.evidence.push({
       imageUrl: secureImageUrl,
-
-      aiAnalysis: {
+      aiAnalysis: aiAnalysis ? {
         predictedClass: aiAnalysis.predicted_class,
         confidence: aiAnalysis.confidence,
         severity: aiAnalysis.severity,
         recommendedAmbulance: aiAnalysis.recommended_ambulance,
         allProbabilities: aiAnalysis.all_probabilities,
-      },
+      } : undefined,
     });
 
     await emergency.save();

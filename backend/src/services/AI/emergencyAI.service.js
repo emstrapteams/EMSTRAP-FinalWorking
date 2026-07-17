@@ -17,6 +17,18 @@ export const analyzeEmergencyImage = async (
     longitude
 ) => {
 
+    if (process.env.ENABLE_AI !== "true") {
+        return {
+            embedding: [],
+            duplicateDetected: false,
+            duplicateOf: null,
+            similarityScore: 0,
+            aiAnalysis: null,
+            priority: "HIGH",
+            warningRequired: false,
+        };
+    }
+
     let embedding = [];
 
     let duplicateDetected = false;

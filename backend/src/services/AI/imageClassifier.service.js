@@ -50,19 +50,7 @@ function getRecommendedAmbulance(predictedClass) {
 }
 export const classifyImage = async (imageUrl) => {
     if (process.env.ENABLE_AI !== "true") {
-        console.log("AI Service is disabled. Returning mock classification.");
-        return {
-            predicted_class: "accident",
-            confidence: 0.95,
-            severity: "HIGH",
-            recommended_ambulance: "Advanced Life Support Ambulance",
-            all_probabilities: {
-                Human_Emergency: 0,
-                accident: 0.95,
-                fire: 0.03,
-                non_emergency: 0.02
-            }
-        };
+        throw new Error("AI service is disabled.");
     }
     try {
 
