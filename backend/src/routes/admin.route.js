@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
     getAdminStats,
+    getPoliceChartStats,
+    getPoliceOverviewStats,
     getAIStats,
     getAllUsers,
     updateUserRole,
@@ -19,6 +21,9 @@ import adminMiddleware from "../middlewares/admin.middleware.js";
 const router = Router();
 
 // Apply auth and admin protections securely to all downstream routes in this router
+router.get("/police/overview", authMiddleware, getPoliceOverviewStats);
+
+router.get("/police/stats", authMiddleware, getPoliceChartStats);
 router.use(authMiddleware, adminMiddleware);
 
 router.get("/stats", getAdminStats);

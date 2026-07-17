@@ -17,8 +17,33 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
-      if (user.role === "admin") navigate("/admin");
-      else navigate("/dashboard");
+      switch (user.role) {
+        case "admin":
+          navigate("/admin", { replace: true });
+          break;
+
+        case "hospital":
+        case "hospital_admin":
+          navigate("/hospital", { replace: true });
+          break;
+
+        case "police":
+        case "police_hq":
+          navigate("/police", { replace: true });
+          break;
+
+        case "ambulance_driver":
+        case "private_driver":
+          navigate("/dashboard", { replace: true });
+          break;
+
+        case "user":
+          navigate("/booking", { replace: true });
+          break;
+
+        default:
+          navigate("/", { replace: true });
+      }
     }
   }, [user, loading, navigate]);
 
@@ -29,9 +54,35 @@ export default function Login() {
       loginUser(data);
       toast.success(data.message || "Login successful!");
 
-      // redirect based on role (mapping DB role to route)
-      if ((data.user?.role || data.role) === "admin") navigate("/admin");
-      else navigate("/dashboard");
+      const role = data.user?.role || data.role;
+
+      switch (role) {
+        case "admin":
+          navigate("/admin", { replace: true });
+          break;
+
+        case "hospital":
+        case "hospital_admin":
+          navigate("/hospital", { replace: true });
+          break;
+
+        case "police":
+        case "police_hq":
+          navigate("/police", { replace: true });
+          break;
+
+        case "ambulance_driver":
+        case "private_driver":
+          navigate("/dashboard", { replace: true });
+          break;
+
+        case "user":
+          navigate("/booking", { replace: true });
+          break;
+
+        default:
+          navigate("/", { replace: true });
+      }
     } catch (error) {
       toast.error(getErrorMessage(error, "Login failed. Please check your credentials."));
     }

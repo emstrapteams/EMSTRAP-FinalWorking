@@ -46,7 +46,7 @@ const AMBULANCE_TYPES = [
         label: "Basic Support",
         sublabel: "BLS",
         icon: Activity,
-        baseRate: 100,
+        baseRate: 80,
         minFare: 250,
         description: "Standard transport with first-aid trained staff.",
         bgClass: "bg-blue-50 dark:bg-blue-900/20",
@@ -58,7 +58,7 @@ const AMBULANCE_TYPES = [
         label: "Oxygen Support",
         sublabel: "O2",
         icon: Wind,
-        baseRate: 150,
+        baseRate: 100,
         minFare: 400,
         description: "Equipped with oxygen supply for breathing support.",
         bgClass: "bg-cyan-50 dark:bg-cyan-900/20",
@@ -70,24 +70,24 @@ const AMBULANCE_TYPES = [
         label: "Advanced / ICU",
         sublabel: "ALS",
         icon: HeartPulse,
-        baseRate: 250,
+        baseRate: 200,
         minFare: 600,
         description: "Critical care unit with ventilator & monitoring.",
-        bgClass: "bg-violet-50 dark:bg-violet-900/20",
-        iconBgClass: "bg-violet-100 dark:bg-violet-900/40",
-        textClass: "text-violet-600 dark:text-violet-400",
+        bgClass: "bg-pink-50 dark:bg-pink-900/20",
+        iconBgClass: "bg-pink-100 dark:bg-pink-900/40",
+        textClass: "text-pink-600 dark:text-pink-400",
     },
     {
         id: "PREGNANT",
         label: "Pregnancy Care",
         sublabel: "OBS",
         icon: Baby,
-        baseRate: 200,
+        baseRate: 150,
         minFare: 500,
         description: "Specialized care for expecting mothers.",
-        bgClass: "bg-pink-50 dark:bg-pink-900/20",
-        iconBgClass: "bg-pink-100 dark:bg-pink-900/40",
-        textClass: "text-pink-600 dark:text-pink-400",
+        bgClass: "bg-violet-50 dark:bg-violet-900/20",
+        iconBgClass: "bg-violet-100 dark:bg-violet-900/40",
+        textClass: "text-violet-600 dark:text-violet-400",
     },
 ];
 
@@ -298,11 +298,10 @@ export default function Booking() {
                                                 key={type.id}
                                                 type="button"
                                                 onClick={() => setAmbulanceType(type.id)}
-                                                className={`relative text-left p-4 rounded-2xl border transition-all ${
-                                                    selected
-                                                        ? `${type.bgClass} border-gray-300 dark:border-gray-600 shadow-md`
-                                                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600"
-                                                }`}
+                                                className={`relative text-left p-4 rounded-2xl border transition-all ${selected
+                                                    ? `${type.bgClass} border-gray-300 dark:border-gray-600 shadow-md`
+                                                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600"
+                                                    }`}
                                             >
                                                 {selected && (
                                                     <span className={`absolute top-3 right-3 ${type.textClass}`}>

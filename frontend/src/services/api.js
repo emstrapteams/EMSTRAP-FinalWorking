@@ -11,8 +11,8 @@ const API = axios.create({
 API.interceptors.request.use((config) => {
   const token = window.localStorage.getItem("authToken");
 
-  
-  
+
+
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -154,6 +154,15 @@ export const getAdminStats = async (range = "1D") => {
   return res.data;
 };
 
+export const getPoliceChartStats = (range = "1D") =>
+  API.get(`/api/admin/police/stats?range=${range}`).then(
+    (res) => res.data
+  );
+
+export const getPoliceOverviewStats = () =>
+  API.get("/api/admin/police/overview").then(
+    (res) => res.data
+  );
 export const getAlerts = async () => {
   const res = await API.get("/api/alerts");
   return res.data;

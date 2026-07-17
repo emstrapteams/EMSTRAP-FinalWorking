@@ -7,7 +7,14 @@ import {
   getPoliceCases,
   updatePoliceCaseStatus,
   getErrorMessage,
+  getPoliceChartStats,
+  getPoliceOverviewStats,
 } from "../../services/api";
+import {
+  Users,
+  Building2,
+  TriangleAlert,
+} from "lucide-react";
 import AdminDetailGrid from "../../components/admin/AdminDetailGrid";
 import AdminModal from "../../components/admin/AdminModal";
 import { formatDate, getStatusBadgeClasses } from "../../components/admin/admin.utils";
@@ -18,6 +25,18 @@ import LiveTrackingMap from "../../components/map/LiveTrackingMap";
 import { Navigation } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import AdminSurface from "../../components/admin/AdminSurface";
 
 const getGoogleMapsUrl = (item, ambulanceLocations) => {
   if (!item) return "";
@@ -60,14 +79,91 @@ const STATUS_PILL = {
 };
 
 const STAT_SEGMENTS = [
-  { key: "ALL",                label: "Total Cases",   statKey: "total"      },
-  { key: "PENDING",            label: "Pending",       statKey: "pending"    },
-  { key: "AMBULANCE_ACCEPTED", label: "In Progress",   statKey: "inProgress" },
-  { key: "COMPLETED",          label: "Resolved",      statKey: "resolved"   },
-  { key: "CANCELLED",          label: "Cancelled",     statKey: "cancelled"  },
+  { key: "ALL", label: "Total Cases", statKey: "total" },
+  { key: "PENDING", label: "Pending", statKey: "pending" },
+  { key: "AMBULANCE_ACCEPTED", label: "In Progress", statKey: "inProgress" },
+  { key: "COMPLETED", label: "Resolved", statKey: "resolved" },
+  { key: "CANCELLED", label: "Cancelled", statKey: "cancelled" },
 ];
 
 const shortRef = (id) => (id ? String(id).slice(-6).toUpperCase() : "------");
+const overviewItems = [
+  { key: "users", title: "Users", accent: "from-indigo-500 to-violet-600", iconBg: "bg-indigo-100 dark:bg-indigo-900/40", iconColor: "text-indigo-600", helper: "Registered accounts", textColor: "text-slate-900", stroke: "#6366f1" },
+  { key: "hospitals", title: "Hospitals", accent: "from-blue-500 to-cyan-500", iconBg: "bg-blue-100 dark:bg-blue-900/40", iconColor: "text-blue-600", helper: "Hospital records", textColor: "text-slate-900", stroke: "#3b82f6" },
+  { key: "emergencies", title: "Emergencies", accent: "from-red-500 to-rose-600", iconBg: "bg-red-100 dark:bg-red-900/40", iconColor: "text-red-600", helper: "Emergency requests", textColor: "text-slate-900", stroke: "#ef4444" },
+];
+const rangeOptions = ["1D", "1M", "3M", "6M", "1Y"];
+
+const defaultStats = {
+  users: 0,
+  hospitals: 0,
+  emergencies: 0,
+};
+
+const toNumber = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const extractOverviewStats = (p) => ({
+  users: toNumber(p?.stats?.users ?? p?.users),
+  hospitals: toNumber(p?.stats?.hospitals ?? p?.hospitals),
+  emergencies: toNumber(p?.stats?.emergencies ?? p?.emergencies),
+});
+
+const normalizeChartData = (p) =>
+  (Array.isArray(p?.data) ? p.data : [])
+    .map((r) => ({
+      label: r?.label || "",
+      users: toNumber(r?.users),
+      hospitals: toNumber(r?.hospitals),
+      emergencies: toNumber(r?.emergencies),
+    }))
+    .filter((r) => r.label);
+
+
+
+const tooltipStyle = {
+  contentStyle: {
+    borderRadius: "14px",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 8px 32px rgba(15, 23, 42, 0.08)",
+    fontSize: "12px",
+  },
+};
+
+const icons = {
+  users: <Users className="h-4 w-4" />,
+  hospitals: <Building2 className="h-4 w-4" />,
+  emergencies: <TriangleAlert className="h-4 w-4" />,
+};
+
+function MetricChart({ title, data, dataKey, stroke, iconBg, iconColor }) {
+  return (
+    <AdminSurface className="p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`h-8 w-8 rounded-xl ${iconBg} flex items-center justify-center ${iconColor}`}>
+          {icons[dataKey]}
+        </div>
+        <div>
+          <h3 className="text-sm font-black text-gray-900 dark:text-white">{title}</h3>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Trend over selected range</p>
+        </div>
+      </div>
+      <div className="rounded-2xl bg-gray-50/70 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 p-3">
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" opacity={0.5} />
+            <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={20} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+            <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+            <Tooltip {...tooltipStyle} />
+            <Line type="monotone" dataKey={dataKey} name={title} stroke={stroke} strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: stroke }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </AdminSurface>
+  );
+}
 
 const ambulanceIcon = L.divIcon({
   html: `<div class="relative flex items-center justify-center">
@@ -113,7 +209,7 @@ function FitBounds({ cases, ambulanceLocations }) {
       const ambLng = ambLoc?.lng || c.ambulance?.currentLocation?.longitude;
       const patLat = patLoc?.lat || patLoc?.latitude;
       const patLng = patLoc?.lng || patLoc?.longitude;
-      
+
       if (ambLat && ambLng) points.push([ambLat, ambLng]);
       if (patLat && patLng) points.push([patLat, patLng]);
     });
@@ -132,10 +228,15 @@ export default function PoliceDashboard() {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedRange, setSelectedRange] = useState("1D");
+  const [chartData, setChartData] = useState([]);
+  const [stats, setStats] = useState(defaultStats);
+  const [graphLoading, setGraphLoading] = useState(true);
+  const [graphError, setGraphError] = useState("");
   const [selectedCase, setSelectedCase] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [popupNotifications, setPopupNotifications] = useState([]);
-  
+
   // Sockets & Location states
   const [ambulanceLocations, setAmbulanceLocations] = useState({});
   const [trackingCase, setTrackingCase] = useState(null);
@@ -300,12 +401,62 @@ export default function PoliceDashboard() {
     }
   };
 
+  useEffect(() => {
+    let ignore = false;
+
+    const loadGraphs = async () => {
+      setGraphLoading(true);
+      setGraphError("");
+
+      try {
+        const [overviewRes, chartRes] = await Promise.all([
+          getPoliceOverviewStats(),
+          getPoliceChartStats(selectedRange),
+        ]);
+
+        if (ignore) return;
+
+        const nextChart = normalizeChartData(chartRes);
+        const nextStats = extractOverviewStats(overviewRes);
+
+        setChartData(nextChart);
+
+        setStats(
+          Object.values(nextStats).some(Boolean)
+            ? nextStats
+            : (nextChart[nextChart.length - 1] || defaultStats)
+        );
+
+        if (!nextChart.length) {
+          setGraphError("No data available");
+        }
+      } catch (err) {
+        if (ignore) return;
+
+        setChartData([]);
+        setGraphError(getErrorMessage(err, "Failed to load dashboard graphs."));
+      } finally {
+        if (!ignore) {
+          setGraphLoading(false);
+        }
+      }
+    };
+
+    loadGraphs();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedRange]);
+
+  const hasData = chartData.length > 0;
+
   const filteredCases =
     statusFilter === "ALL"
       ? cases
       : cases.filter((c) => c.status === statusFilter);
 
-  const stats = {
+  const caseStats = {
     total: cases.length,
     pending: cases.filter((c) => c.status === "PENDING").length,
     inProgress: cases.filter((c) => c.status === "AMBULANCE_ACCEPTED").length,
@@ -314,11 +465,11 @@ export default function PoliceDashboard() {
   };
 
   const statValueByKey = {
-    ALL: stats.total,
-    PENDING: stats.pending,
-    AMBULANCE_ACCEPTED: stats.inProgress,
-    COMPLETED: stats.resolved,
-    CANCELLED: stats.cancelled,
+    ALL: caseStats.total,
+    PENDING: caseStats.pending,
+    AMBULANCE_ACCEPTED: caseStats.inProgress,
+    COMPLETED: caseStats.resolved,
+    CANCELLED: caseStats.cancelled,
   };
 
   const getCaseDetails = (c) => ({
@@ -333,7 +484,7 @@ export default function PoliceDashboard() {
     "Vehicle Number": c.ambulance?.vehicleNumber || "N/A",
     "Assigned Hospital": c.hospital?.name || "Pending Acceptance",
     "Hospital Location": c.hospital?.location || "N/A",
-  
+
     "Reported At": formatDate(c.createdAt),
     "AI Prediction": c.aiAnalysis?.predictedClass || "N/A",
 
@@ -371,23 +522,20 @@ export default function PoliceDashboard() {
                 type="button"
                 onClick={() => setStatusFilter(seg.key)}
                 aria-pressed={isActive}
-                className={`flex flex-col gap-2 rounded-2xl border p-5 text-left transition ${
-                  isActive
-                    ? "border-blue-100 bg-blue-50 dark:border-blue-400/20 dark:bg-blue-500/10"
-                    : "border-gray-200 bg-white hover:border-gray-300 dark:border-white/10 dark:bg-slate-900 dark:hover:border-white/20"
-                }`}
+                className={`flex flex-col gap-2 rounded-2xl border p-5 text-left transition ${isActive
+                  ? "border-blue-100 bg-blue-50 dark:border-blue-400/20 dark:bg-blue-500/10"
+                  : "border-gray-200 bg-white hover:border-gray-300 dark:border-white/10 dark:bg-slate-900 dark:hover:border-white/20"
+                  }`}
               >
                 <span
-                  className={`text-xs font-bold uppercase tracking-widest ${
-                    isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-slate-500"
-                  }`}
+                  className={`text-xs font-bold uppercase tracking-widest ${isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-slate-500"
+                    }`}
                 >
                   {seg.label}
                 </span>
                 <span
-                  className={`text-4xl font-bold ${
-                    isActive ? "text-blue-600 dark:text-blue-300" : "text-gray-900 dark:text-white"
-                  }`}
+                  className={`text-4xl font-bold ${isActive ? "text-blue-600 dark:text-blue-300" : "text-gray-900 dark:text-white"
+                    }`}
                 >
                   {statValueByKey[seg.key]}
                 </span>
@@ -395,7 +543,108 @@ export default function PoliceDashboard() {
             );
           })}
         </div>
+        {/* Combined Overview */}
+        <AdminSurface className="mt-6 p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
+            <div>
+              <h2 className="text-base font-black text-gray-900 dark:text-white">
+                Combined Overview
+              </h2>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                Users, Hospitals and Emergency trends
+              </p>
+            </div>
 
+            <div className="flex flex-wrap gap-1.5">
+              {rangeOptions.map((opt) => {
+                const active = opt === selectedRange;
+
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setSelectedRange(opt)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-black transition-all duration-150 ${active
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                      }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {graphLoading ? (
+            <div className="rounded-2xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 p-12 text-center">
+              <div className="h-8 w-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-gray-400">Loading chart...</p>
+            </div>
+          ) : graphError && !hasData ? (
+            <div className="rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 p-12 text-center">
+              <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                {graphError}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-gray-50/70 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 p-3">
+              <ResponsiveContainer width="100%" height={340}>
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" opacity={0.5} />
+
+                  <XAxis
+                    dataKey="label"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+
+                  <YAxis
+                    allowDecimals={false}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+
+                  <Tooltip {...tooltipStyle} />
+
+                  <Legend />
+
+                  {overviewItems.map((item) => (
+                    <Line
+                      key={item.key}
+                      type="monotone"
+                      dataKey={item.key}
+                      name={item.title}
+                      stroke={item.stroke}
+                      strokeWidth={2.5}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </AdminSurface>
+        {/* Individual Graphs */}
+        {hasData && (
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+            {overviewItems.map((item) => (
+              <MetricChart
+                key={item.key}
+                title={item.title}
+                data={chartData}
+                dataKey={item.key}
+                stroke={item.stroke}
+                iconBg={item.iconBg}
+                iconColor={item.iconColor}
+              />
+            ))}
+          </div>
+        )}
         {/* Live Map Panel */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-slate-900 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
@@ -409,9 +658,9 @@ export default function PoliceDashboard() {
           </div>
 
           <div className="h-[400px] rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 relative z-0">
-            <MapContainer 
-              center={[20.5937, 78.9629]} 
-              zoom={13} 
+            <MapContainer
+              center={[20.5937, 78.9629]}
+              zoom={13}
               style={{ height: '100%', width: '100%' }}
               zoomControl={false}
             >
@@ -526,7 +775,7 @@ export default function PoliceDashboard() {
                           </span>
 
                           <span className="rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-bold">
-                            🎯 {(c.aiAnalysis.confidence * 100).toFixed(1)}%
+                            {(c.aiAnalysis.confidence * 100).toFixed(1)}%
                           </span>
 
                         </div>
@@ -595,7 +844,7 @@ export default function PoliceDashboard() {
           title="Case Details"
           subtitle="Full emergency case information"
           onClose={() => setSelectedCase(null)}
-        > 
+        >
           <div className="mb-6">
             <EvidenceImageViewer
               mainImage={selectedCase.imageUrl}
@@ -635,8 +884,8 @@ export default function PoliceDashboard() {
                     ambulanceLocations[trackingCase._id]
                       ? { lat: ambulanceLocations[trackingCase._id].lat, lng: ambulanceLocations[trackingCase._id].lng }
                       : trackingCase.ambulance?.currentLocation
-                      ? { lat: trackingCase.ambulance.currentLocation.latitude, lng: trackingCase.ambulance.currentLocation.longitude }
-                      : null
+                        ? { lat: trackingCase.ambulance.currentLocation.latitude, lng: trackingCase.ambulance.currentLocation.longitude }
+                        : null
                   }
                   height="100%"
                 />

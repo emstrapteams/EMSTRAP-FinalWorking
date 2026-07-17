@@ -19,7 +19,7 @@ export default function LiveMap() {
     const [alerts, setAlerts] = useState([]);
     const [ambulanceLocations, setAmbulanceLocations] = useState({});
     const [liveAmbulancesCount, setLiveAmbulancesCount] = useState(0);
-    
+
     useEffect(() => {
         const fetchInitialState = async () => {
             try {
@@ -27,7 +27,7 @@ export default function LiveMap() {
                 if (res.success) {
                     setAlerts(res.alerts.filter(a => a.status === "PENDING" || a.status === "AMBULANCE_ACCEPTED"));
                 }
-                
+
                 const statsRes = await getOverviewStats();
                 if (statsRes.liveAmbulances !== undefined) {
                     setLiveAmbulancesCount(statsRes.liveAmbulances);
@@ -86,7 +86,9 @@ export default function LiveMap() {
         <div className="relative h-[calc(100vh-8rem)] w-full overflow-hidden rounded-[2.5rem] border border-slate-800 shadow-2xl">
             <div className="absolute top-6 left-6 z-[900] bg-slate-900/90 backdrop-blur-xl border border-slate-800 p-5 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center min-w-[12rem]">
                 <h3 className="text-white font-black tracking-tighter uppercase text-xs text-center mb-1">Active Ambulances</h3>
-                <p className="text-4xl font-black text-emerald-400">{liveAmbulancesCount}</p>
+                <p className="text-4xl font-black text-white">
+                    {liveAmbulancesCount}
+                </p>
                 <p className="text-slate-500 text-[10px] font-black tracking-[0.2em] uppercase mt-1">Updates every 5 min</p>
             </div>
 
@@ -101,9 +103,9 @@ export default function LiveMap() {
                 </div>
             </div>
 
-            <MapContainer 
-                center={computedCenter} 
-                zoom={13} 
+            <MapContainer
+                center={computedCenter}
+                zoom={13}
                 style={{ height: '100%', width: '100%' }}
                 zoomControl={false}
             >
@@ -120,7 +122,7 @@ export default function LiveMap() {
                         <div key={alert._id}>
                             {/* Patient Marker */}
                             {patientLoc && (
-                                <Marker 
+                                <Marker
                                     position={[patientLoc.latitude, patientLoc.longitude]}
                                     icon={patientIcon}
                                 >
@@ -135,7 +137,7 @@ export default function LiveMap() {
 
                             {/* Ambulance Marker (Live) */}
                             {ambulanceLoc && (
-                                <Marker 
+                                <Marker
                                     position={[ambulanceLoc.lat, ambulanceLoc.lng]}
                                     icon={emergencyIcon}
                                 >

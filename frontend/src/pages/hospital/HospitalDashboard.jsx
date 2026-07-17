@@ -100,7 +100,7 @@ function FitBounds({ alerts, ambulanceLocations, patientLocations }) {
       const ambLng = ambLoc?.lng || alert.ambulance?.currentLocation?.longitude;
       const patLat = patLoc?.lat || patLoc?.latitude;
       const patLng = patLoc?.lng || patLoc?.longitude;
-      
+
       if (ambLat && ambLng) points.push([ambLat, ambLng]);
       if (patLat && patLng) points.push([patLat, patLng]);
     });
@@ -386,23 +386,23 @@ export default function HospitalDashboard() {
   const getPriorityInfo = (alert) => {
     const status = alert.status || "PENDING";
     if (["PENDING", "AMBULANCE_ACCEPTED", "ARRIVED_AT_LOCATION"].includes(status)) {
-      return { 
-        label: "Critical", 
+      return {
+        label: "Critical",
         colorClass: "bg-red-500/10 text-red-650 border border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30",
-        pulse: true 
+        pulse: true
       };
     }
     if (["EN_ROUTE_TO_HOSPITAL", "IN_TRANSIT"].includes(status)) {
-      return { 
-        label: "High Priority", 
+      return {
+        label: "High Priority",
         colorClass: "bg-amber-500/10 text-amber-655 border border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30",
-        pulse: false 
+        pulse: false
       };
     }
-    return { 
-      label: "Stable", 
+    return {
+      label: "Stable",
       colorClass: "bg-emerald-500/10 text-emerald-655 border border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30",
-      pulse: false 
+      pulse: false
     };
   };
 
@@ -566,20 +566,17 @@ export default function HospitalDashboard() {
               key={item.key}
               type="button"
               onClick={() => setSelectedFilter(item.key)}
-              className={`rounded-2xl border p-4 text-left transition-colors focus:outline-none ${
-                isSelected
+              className={`rounded-2xl border p-4 text-left transition-colors focus:outline-none ${isSelected
                   ? item.selectedClass
                   : `border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${item.hoverClass}`
-              }`}
+                }`}
             >
-              <p className={`text-xs font-semibold uppercase tracking-wide ${
-                isSelected ? item.labelClass : "text-slate-500 dark:text-slate-400"
-              }`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide ${isSelected ? item.labelClass : "text-slate-500 dark:text-slate-400"
+                }`}>
                 {item.label}
               </p>
-              <p className={`mt-2 text-2xl font-bold ${
-                isSelected ? item.valueClass : "text-slate-900 dark:text-white"
-              }`}>
+              <p className={`mt-2 text-2xl font-bold ${isSelected ? item.valueClass : "text-slate-900 dark:text-white"
+                }`}>
                 {item.value}
               </p>
             </button>
@@ -600,9 +597,9 @@ export default function HospitalDashboard() {
         </div>
 
         <div className="h-[400px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative z-0">
-          <MapContainer 
-            center={[20.5937, 78.9629]} 
-            zoom={13} 
+          <MapContainer
+            center={[20.5937, 78.9629]}
+            zoom={13}
             style={{ height: '100%', width: '100%' }}
             zoomControl={false}
           >
@@ -751,12 +748,12 @@ export default function HospitalDashboard() {
                               {/* Emergency Type */}
                               <span
                                 className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide ${alert.aiAnalysis.predictedClass === "fire"
-                                    ? "bg-red-100 text-red-700"
-                                    : alert.aiAnalysis.predictedClass === "accident"
-                                      ? "bg-orange-100 text-orange-700"
-                                      : alert.aiAnalysis.predictedClass === "medical"
-                                        ? "bg-blue-100 text-blue-700"
-                                        : "bg-green-100 text-green-700"
+                                  ? "bg-red-100 text-red-700"
+                                  : alert.aiAnalysis.predictedClass === "accident"
+                                    ? "bg-orange-100 text-orange-700"
+                                    : alert.aiAnalysis.predictedClass === "medical"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : "bg-green-100 text-green-700"
                                   }`}
                               >
                                 {alert.aiAnalysis.predictedClass.toUpperCase()}
@@ -767,12 +764,12 @@ export default function HospitalDashboard() {
 
                               <span
                                 className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide ${alert.aiAnalysis.severity === "CRITICAL"
-                                    ? "bg-red-600 text-white"
-                                    : alert.aiAnalysis.severity === "HIGH"
-                                      ? "bg-orange-500 text-white"
-                                      : alert.aiAnalysis.severity === "MODERATE"
-                                        ? "bg-yellow-500 text-white"
-                                        : "bg-green-600 text-white"
+                                  ? "bg-red-600 text-white"
+                                  : alert.aiAnalysis.severity === "HIGH"
+                                    ? "bg-orange-500 text-white"
+                                    : alert.aiAnalysis.severity === "MODERATE"
+                                      ? "bg-yellow-500 text-white"
+                                      : "bg-green-600 text-white"
                                   }`}
                               >
                                 {alert.aiAnalysis.severity}
@@ -781,7 +778,7 @@ export default function HospitalDashboard() {
                               {/* Confidence */}
                               <div className="text-xs font-bold text-blue-600 dark:text-blue-400">
 
-                                🎯 {(alert.aiAnalysis.confidence * 100).toFixed(1)}%
+                                {(alert.aiAnalysis.confidence * 100).toFixed(1)}%
 
                               </div>
 
@@ -834,7 +831,7 @@ export default function HospitalDashboard() {
                               <ClipboardIcon className="h-3.5 w-3.5" strokeWidth={2} />
                               Details
                             </button>
-                            
+
                             {/* Live Track Button */}
                             {alert.ambulance && alert.status !== "COMPLETED" && (
                               <button
@@ -846,7 +843,7 @@ export default function HospitalDashboard() {
                                 Live Track
                               </button>
                             )}
-                            
+
                             {/* Resolve Button */}
                             {alert.status !== "COMPLETED" && isAssignedHospital(alert) && (
                               <button
@@ -906,7 +903,7 @@ export default function HospitalDashboard() {
 
                             <span className="text-[10px] font-bold text-blue-600">
 
-                               {(alert.aiAnalysis.confidence * 100).toFixed(1)}%
+                              {(alert.aiAnalysis.confidence * 100).toFixed(1)}%
 
                             </span>
 
@@ -947,7 +944,7 @@ export default function HospitalDashboard() {
                         <ClipboardIcon className="h-3.5 w-3.5" strokeWidth={2} />
                         Details
                       </button>
-                      
+
                       {alert.ambulance && alert.status !== "COMPLETED" && (
                         <button
                           type="button"
@@ -958,7 +955,7 @@ export default function HospitalDashboard() {
                           Live Track
                         </button>
                       )}
-                      
+
                       {alert.status !== "COMPLETED" && isAssignedHospital(alert) && (
                         <button
                           type="button"
@@ -990,9 +987,9 @@ export default function HospitalDashboard() {
 
       {/* METADATA DETAILS MODAL */}
       {selectedAlert && (
-        <AdminModal 
-          title="Emergency Details" 
-          subtitle="Full medical record summary compiled from dispatcher feed" 
+        <AdminModal
+          title="Emergency Details"
+          subtitle="Full medical record summary compiled from dispatcher feed"
           onClose={() => setSelectedAlert(null)}
         >
           <div className="space-y-6">
@@ -1029,25 +1026,25 @@ export default function HospitalDashboard() {
           onClose={() => setTrackingAlert(null)}
         >
           <div className="flex flex-col gap-6">
-            
+
             {/* SPLIT PANEL: MAP & META INFO */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                     {/* Leaflet Map Area */}
+              {/* Leaflet Map Area */}
               <div className="lg:col-span-2 h-[400px] w-full overflow-hidden rounded-2xl border border-slate-205 dark:border-slate-800 shadow-sm relative z-0">
                 <LiveTrackingMap
                   userLocation={
                     patientLocations[trackingAlert._id]
                       ? { lat: patientLocations[trackingAlert._id].lat, lng: patientLocations[trackingAlert._id].lng }
                       : trackingAlert.location
-                      ? { lat: trackingAlert.location.latitude, lng: trackingAlert.location.longitude }
-                      : null
+                        ? { lat: trackingAlert.location.latitude, lng: trackingAlert.location.longitude }
+                        : null
                   }
                   driverLocation={
                     ambulanceLocations[trackingAlert._id]
                       ? { lat: ambulanceLocations[trackingAlert._id].lat, lng: ambulanceLocations[trackingAlert._id].lng }
                       : trackingAlert.ambulance?.currentLocation
-                      ? { lat: trackingAlert.ambulance.currentLocation.latitude, lng: trackingAlert.ambulance.currentLocation.longitude }
-                      : null
+                        ? { lat: trackingAlert.ambulance.currentLocation.latitude, lng: trackingAlert.ambulance.currentLocation.longitude }
+                        : null
                   }
                   hospitalLocation={
                     trackingAlert.status === "IN_PROGRESS" && trackingAlert.dropoffLocation?.latitude
@@ -1062,7 +1059,7 @@ export default function HospitalDashboard() {
               <div className="flex flex-col justify-between bg-slate-55 dark:bg-slate-900 border border-slate-105 dark:border-slate-805 rounded-2xl p-5 space-y-4">
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-[0.25em] text-slate-405">Incident Details</h4>
-                  
+
                   <div className="mt-4 space-y-3">
                     <div>
                       <p className="text-[10px] font-bold text-slate-400">PATIENT NAME</p>

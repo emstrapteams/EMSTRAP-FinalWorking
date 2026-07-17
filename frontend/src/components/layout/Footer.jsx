@@ -68,9 +68,9 @@ export default function Footer() {
           {/* Contact */}
           <div>
             <h3 className="font-bold mb-3">Contact</h3>
-            <p className="text-gray-400">contact@emstrap.com</p>
-            <p className="text-gray-400">+91 9880882476</p>
-            <p className="text-gray-400">Bangalore, Karnataka, India</p>
+            <p className="text-gray-400 mb-3">contact@emstrap.com</p>
+            <p className="text-gray-400 mb-3">+91 9880882476</p>
+            <p className="text-gray-400 mb-3">Bangalore, Karnataka, India</p>
           </div>
 
         </div>
