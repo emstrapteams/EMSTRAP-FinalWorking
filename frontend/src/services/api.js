@@ -1,10 +1,9 @@
 import axios from "axios";
 
-// Prefer Vite proxy in dev (`/api`, `/auth`) and allow explicit override via .env
-export const API_URL = (import.meta.env.VITE_API_URL || "").trim().replace(/\/+$/, "");
+export const API_URL = (import.meta.env.VITE_API_URL || "https://emstrap-finalworking.onrender.com").trim().replace(/\/+$/, "");
 
 const API = axios.create({
-  baseURL: API_URL || "http://localhost:5000",
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true
 });
 

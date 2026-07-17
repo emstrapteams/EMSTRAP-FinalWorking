@@ -21,6 +21,9 @@ const allowedOrigins = [
   "http://127.0.0.1:5173",
   "http://localhost:5174",
   "http://127.0.0.1:5174",
+  "https://emstrapteams.netlify.app",
+  "https://emstrap-finalworking.netlify.app",
+  "https://emstrap-merge.netlify.app",
 ].filter(Boolean);
 
 app.use(cors({

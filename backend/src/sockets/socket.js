@@ -7,7 +7,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:5174",
-  "http://127.0.0.1:5174"
+  "http://127.0.0.1:5174",
+  "https://emstrapteams.netlify.app",
+  "https://emstrap-finalworking.netlify.app",
+  "https://emstrap-merge.netlify.app",
 ].filter(Boolean);
 
 // To optimize DB performance, we throttle location updates to once every 5 seconds per request
