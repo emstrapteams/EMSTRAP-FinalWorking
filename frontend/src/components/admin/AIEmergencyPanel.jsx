@@ -3,6 +3,7 @@ import { getAIStats } from "../../services/api";
 import AdminSurface from "./AdminSurface";
 
 export default function AIEmergencyPanel() {
+    const [aiDisabled, setAiDisabled] = useState(false);
 
     const [stats, setStats] = useState({
         fires: 0,
@@ -28,6 +29,9 @@ export default function AIEmergencyPanel() {
 
                 if (response.success) {
                     setStats(response.stats);
+                    setAiDisabled(false);
+                } else if (response.aiDisabled) {
+                    setAiDisabled(true);
                 }
 
             } catch (err) {
@@ -76,9 +80,9 @@ export default function AIEmergencyPanel() {
 
                     </p>
 
-                    <p className="font-bold text-green-600">
+                    <p className={aiDisabled ? "font-bold text-red-600" : "font-bold text-green-600"}>
 
-                        ● ACTIVE
+                        {aiDisabled ? "● DISABLED" : "● ACTIVE"}
 
                     </p>
 
@@ -86,45 +90,55 @@ export default function AIEmergencyPanel() {
 
             </div>
 
-            <div className="font-bold grid grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+            {aiDisabled ? (
+                <div className="mt-6 p-5 border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-gray-900/50">
+                    <span className="text-3xl mb-2">🤖</span>
+                    <h4 className="font-bold text-gray-900 dark:text-white">AI features currently unavailable</h4>
+                    <p className="text-xs text-gray-500 max-w-sm mt-1">
+                        The FastAPI-based AI Classifier is currently turned off. To enable AI analysis, set ENABLE_AI=true in your environment variables.
+                    </p>
+                </div>
+            ) : (
+                <div className="font-bold grid grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
 
-                <Stat
-                    title=" Fires"
-                    value={stats.fires}
-                    color="text-red-600"
-                />
+                    <Stat
+                        title=" Fires"
+                        value={stats.fires}
+                        color="text-red-600"
+                    />
 
-                <Stat
-                    title=" Accidents"
-                    value={stats.accidents}
-                    color="text-orange-600"
-                />
+                    <Stat
+                        title=" Accidents"
+                        value={stats.accidents}
+                        color="text-orange-600"
+                    />
 
-                <Stat
-                    title=" Non Emergency"
-                    value={stats.nonEmergency}
-                    color="text-green-600"
-                />
+                    <Stat
+                        title=" Non Emergency"
+                        value={stats.nonEmergency}
+                        color="text-green-600"
+                    />
 
-                <Stat
-                    title=" Critical"
-                    value={stats.critical}
-                    color="text-red-700"
-                />
+                    <Stat
+                        title=" Critical"
+                        value={stats.critical}
+                        color="text-red-700"
+                    />
 
-                <Stat
-                    title=" High"
-                    value={stats.high}
-                    color="text-orange-600"
-                />
+                    <Stat
+                        title=" High"
+                        value={stats.high}
+                        color="text-orange-600"
+                    />
 
-                <Stat
-                    title=" AI Confidence"
-                    value={`${stats.averageConfidence}%`}
-                    color="text-indigo-600"
-                />
+                    <Stat
+                        title=" AI Confidence"
+                        value={`${stats.averageConfidence}%`}
+                        color="text-indigo-600"
+                    />
 
-            </div>
+                </div>
+            )}
 
         </AdminSurface>
 

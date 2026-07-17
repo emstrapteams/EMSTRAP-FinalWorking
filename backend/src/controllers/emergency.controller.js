@@ -483,6 +483,14 @@ export const precheckEmergency = async (req, res) => {
       });
     }
 
+    if (process.env.ENABLE_AI !== "true") {
+      return res.status(503).json({
+        success: false,
+        message: "AI service is currently disabled.",
+        secureImageUrl,
+      });
+    }
+
     const aiAnalysis = await classifyImage(secureImageUrl);
 
     const { priority, warningRequired } =

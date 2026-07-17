@@ -250,17 +250,48 @@ export const updatePoliceCaseStatus = async (caseId, status) => {
 };
 
 export const getAIStats = async () => {
-  const response = await API.get("/api/admin/ai-stats");
-  return response.data;
+  try {
+    const response = await API.get("/api/admin/ai-stats");
+    return response.data;
+  } catch (error) {
+    console.warn("getAIStats failed or disabled:", error.message);
+    return {
+      success: false,
+      message: "AI service is currently disabled.",
+      aiDisabled: true,
+      stats: {
+        fires: 0,
+        accidents: 0,
+        medical: 0,
+        nonEmergency: 0,
+        critical: 0,
+        high: 0,
+        moderate: 0,
+        low: 0,
+        averageConfidence: 0
+      }
+    };
+  }
 };
 
 export const precheckEmergency = async (data) => {
-  const response = await API.post(
-    "/api/emergency/precheck",
-    data
-  );
-
-  return response.data;
+  try {
+    const response = await API.post(
+      "/api/emergency/precheck",
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.warn("precheckEmergency failed or disabled:", error.message);
+    const fallbackUrl = error.response?.data?.secureImageUrl || data.imageUrl;
+    return {
+      success: true,
+      secureImageUrl: fallbackUrl,
+      warningRequired: false,
+      priority: "HIGH",
+      aiDisabled: true
+    };
+  }
 };
 
 export const uploadEvidence = async (requestId, imageUrl) => {

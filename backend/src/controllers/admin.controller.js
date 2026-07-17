@@ -786,6 +786,12 @@ export const getPoliceOverviewStats = async (req, res) => {
     }
 };
 export const getAIStats = async (req, res) => {
+    if (process.env.ENABLE_AI !== "true") {
+        return res.status(503).json({
+            success: false,
+            message: "AI service is currently disabled."
+        });
+    }
     try {
 
         const result = await Emergency.aggregate([
