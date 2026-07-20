@@ -88,10 +88,9 @@ export default function Navbar() {
   };
 
   const navLinkClasses = (active) =>
-    `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-      active
-        ? "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400"
+    `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${active
+      ? "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400"
     }`;
 
   return (
@@ -141,10 +140,10 @@ export default function Navbar() {
                 ) : isHospitalContext ? (
                   <>
                     <Link to="/hospital" className={navLinkClasses(location.pathname === "/hospital")}>
-                        <span>Dashboard</span>
+                      <span>Dashboard</span>
                     </Link>
                     <Link to="/hospital/PatientRecords" className={navLinkClasses(location.pathname.startsWith("/hospital/PatientRecords"))}>
-                  
+
                       <span>Patient Records</span>
                     </Link>
                     <Link to="/hospital/map" className={navLinkClasses(location.pathname.startsWith("/hospital/map"))}>
@@ -156,24 +155,40 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                        {(!user || user?.role === 'user') && (
-                          <Link to="/" className={navLinkClasses(location.pathname === "/")}>
-                            <span>Emergency</span>
-                          </Link>
-                        )}
+                    {!user && (
+                      <>
+                        <Link to="/" className={navLinkClasses(location.pathname === "/")}>
+                          <span>Emergency</span>
+                        </Link>
 
-                        {user?.role === 'user' && (
-                          <Link to="/dashboard" className={navLinkClasses(location.pathname === "/dashboard")}>
-                            <span>Dashboard</span>
-                          </Link>
-                        )}
+                        <Link to="/login" className={navLinkClasses(false)}>
+                          <span>Booking</span>
+                        </Link>
+                      </>
+                    )}
 
-                        {user?.role === 'user' && (
-                          <Link to="/booking" className={navLinkClasses(location.pathname === "/booking")}>
-                            <span>New Booking</span>
-                          </Link>
-                        )}
-                    
+                    {user?.role === "user" && (
+                      <>
+                        <Link to="/" className={navLinkClasses(location.pathname === "/")}>
+                          <span>Emergency</span>
+                        </Link>
+
+                        <Link
+                          to="/booking"
+                          className={navLinkClasses(location.pathname.startsWith("/booking"))}
+                        >
+                          <span>New Booking</span>
+                        </Link>
+
+                        <Link
+                          to="/dashboard"
+                          className={navLinkClasses(location.pathname.startsWith("/dashboard"))}
+                        >
+                          <span>Dashboard</span>
+                        </Link>
+                      </>
+                    )}
+
                   </>
                 )}
               </div>
